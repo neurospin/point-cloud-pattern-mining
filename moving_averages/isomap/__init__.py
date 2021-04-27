@@ -1,0 +1,1 @@
+from .isomap_sklearn import Isomap_dist

@@ -1,0 +1,15 @@
+zsun/
+.vscode
+docs
+*.rst
+example_ophelie
+new_experiment
+sep19_v2
+*.egg-info
+cestino
+bucket_extraction_bv_process/
+data/
+
+__pycache__/
+*.py[cod]
+scripts/
