@@ -7,7 +7,7 @@ setuptools.setup(name='moving_averages',
                  # from python 3.6, dictionary order is preserved during execution
                  python_requires='>3.6',
 
-                 version='0.0.1',
+                 version='0.0.2',
                  description='Tools for the calculation of moving averages of 3D objects',
                  author='Marco Pascucci - NeuroSpin (CEA)',
                  long_description=long_description,

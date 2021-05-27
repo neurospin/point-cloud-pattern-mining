@@ -7,6 +7,8 @@ clone this repo somewhere where you will keep it, then in the root folder instal
 
 ```
 $ cd moving_averages
-$ pip3 install -e .```
+$ pip3 install -e .
+
+```
 
 the `-e` options causes the install to link the module to the cloned folder, instead of installing it in the default module location.

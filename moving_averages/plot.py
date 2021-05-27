@@ -7,7 +7,6 @@ import pandas
 
 
 def plot_sulci(list_of_sulci: Sequence[numpy.ndarray], labels: Sequence[str] = None, transpose=True, x_shift=0) -> None:
-
     """ Plot sulci (with plotly Scatter3D).
 
     :param sulci: a list of arrays representing the sulci to plot
@@ -26,7 +25,6 @@ def plot_sulci(list_of_sulci: Sequence[numpy.ndarray], labels: Sequence[str] = N
 
     assert len(labels) == len(
         list_of_sulci), "ERROR: len(labels) != len(list_of_sulci)"
-
 
     for i, sulcus in enumerate(list_of_sulci):
 
@@ -65,7 +63,7 @@ def plot_sulci(list_of_sulci: Sequence[numpy.ndarray], labels: Sequence[str] = N
 def draw_isomap_embedding(embedding: numpy.ndarray or pandas.DataFrame, n_bins=20, density_2D=False):
     """Draw the isomap output in a scatter plot.
     The number of dimensions of the embedding must be from 1 to 3.
-            
+
     Args:
         embedding (numpy.ndarray orpandas.DataFrame): The reduced dimension output of isomap
         n_bins (int, optional): histogram bins. Defaults to 20.
@@ -76,34 +74,35 @@ def draw_isomap_embedding(embedding: numpy.ndarray or pandas.DataFrame, n_bins=2
     """
 
     if isinstance(embedding, pandas.DataFrame):
-        data = numpy.array([embedding.iloc[:,i] for i in range(len(embedding.columns))])
+        data = numpy.array([embedding.iloc[:, i]
+                            for i in range(len(embedding.columns))])
     elif isinstance(embedding, numpy.ndarray):
         data = embedding
     else:
         raise TypeError("expected array or DataFrame")
 
-
-    group_labels = ["dimension {}".format(i+1) for i in range(len(embedding.columns))]
+    group_labels = ["dimension {}".format(i+1)
+                    for i in range(len(embedding.columns))]
     bin_size = (data.max()-data.min())/n_bins
-    
+
     if density_2D:
-        ff.create_2d_density(data[0],data[1], point_size=3).show()
+        ff.create_2d_density(data[0], data[1], point_size=3).show()
     else:
-        ff.create_distplot(data, group_labels, bin_size=bin_size, histnorm=None, show_curve=False).show()
+        ff.create_distplot(data, group_labels, bin_size=bin_size,
+                           histnorm=None, show_curve=False).show()
 
 
-def brochette_layout(plotly_figure, title:str=None, hight=3):
+def brochette_layout(plotly_figure, title: str = None, hight=3):
     """Adapt the figure to the 'brochette' plot (many entities with an x shift)."""
 
     fig = plotly_figure
 
-    fig.layout.xaxis1.update( dict(range=[0, 100]) )
+    fig.layout.yaxis1.update(dict(range=[0, 100]))
 
     camera = dict(
-        eye=dict(x=0, y=0.5, z=hight)
+        eye=dict(x=-0.8, y=0, z=hight)
     )
 
     fig.update_layout(scene_camera=camera, title=title)
-    fig.update_scenes(aspectratio=dict(x=5,y=1,z=1))
+    fig.update_scenes(aspectratio=dict(x=1, y=5, z=1))
     return fig
-  
