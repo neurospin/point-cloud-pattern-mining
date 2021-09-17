@@ -5,7 +5,8 @@ from .plot import plot_sulci, draw_isomap_embedding
 from .distance import calc_all_icp, find_MAD_outliers, get_center_subject
 from . import distance
 from .isomap import Isomap_dist
-from .transform import talairach_transform_batch, talairach_transform_and_save_batch, align_buckets_by_ICP
+from .transform import load_buket, load_bukets, align_buckets_by_ICP, align_buckets_by_ICP_batch
+from . import plot
 
 import logging
 # === Logging ===

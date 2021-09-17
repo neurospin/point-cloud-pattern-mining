@@ -94,8 +94,6 @@ def calc_MA_volumes_batch(centers, buckets_dict, distance_df, axis_n, FWHM):
                 axis_n,
                 FWHM=FWHM)
     
-    subjects = buckets_dict.keys()
-
     with Pool(cpu_count()) as p:
         volumes = list(tqdm(p.imap(f, centers), total=len(centers),
             desc="Calculating moving averages"))
