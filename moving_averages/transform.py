@@ -77,10 +77,22 @@ def load_buket(bucket_file, transformation_file=None, flip=False):
     translation = None
 
     # >>> THE TAILERACH TRANSFORM HAPPENS HERE
+
     if transformation_file is not None:
         # get the rotation matrix and tranlation vector
         rotation, translation = fu.parse_transformation_file(
             transformation_file)
+        data_points = transform_datapoints(
+            data_points=data_points,
+            dxyz=dxyz,
+            rotation_matrix=rotation,
+            translation_vector=translation,
+            flip=flip
+        )
+    else:
+        # apply the scaling even if the transformation is not given
+        rotation = numpy.eye(3),  # identity
+        translation = numpy.zeros(3),  # [0,0,0]
         data_points = transform_datapoints(
             data_points=data_points,
             dxyz=dxyz,
@@ -242,7 +254,7 @@ def align_buckets_by_ICP(volume_to_align: numpy.ndarray, ref_volume: numpy.ndarr
     return data_points, rot, tra
 
 
-def align_buckets_by_ICP_batch(volumes_dict: Sequence[numpy.ndarray], ref_subject_name: str):
+def align_buckets_by_ICP_batch(volumes_dict: Sequence[numpy.ndarray], ref_subject_name: str, cores=None):
     """ Align all subjects in bucket_dict to a reference subject, using ICP.
 
     This function is parallelized and uses all available CPUs.
@@ -263,7 +275,11 @@ def align_buckets_by_ICP_batch(volumes_dict: Sequence[numpy.ndarray], ref_subjec
 
     f = partial(align_buckets_by_ICP, ref_volume=model_bucket)
 
-    with Pool(cpu_count()) as p:
+    if cores is None:
+        cores = cpu_count()-3
+
+    print(cores)
+    with Pool(cores) as p:
         icp_output = list(tqdm(p.imap(f, other_buckets), total=len(other_buckets),
                                desc="Aligning buckets to {}".format(ref_subject_name)))
 
