@@ -28,23 +28,21 @@ def transform_datapoints(data_points: np.ndarray, dxyz: np.ndarray, rotation_mat
         # multiply by scale factors
         point = point*dxyz
 
-        # make the array a column vector
-        # point = point.reshape(1,3)
+        if (rotation_matrix is not None) and not np.array_equal(rotation_matrix, np.eye(3)):
+            # print("rotate", point)
+            point = np.dot(rotation_matrix, point)
 
-        # >>> APPLY THE TRANSFORMATION
-        # rotate (by matrix multiplication)
-        rot_point = np.dot(rotation_matrix, point)
         # translate
-        transformed_point = rot_point + translation_vector
+        if (translation_vector is not None) and not np.array_equal(translation_vector, np.zeros(3)):
+            # print("translate", point, translation_vector)
+            point = point + translation_vector
 
         if flip:
-            transformed_point[0] = -transformed_point[0]
-
-        # round
-        # transformed_point = np.round(transformed_point)
+            # print(point)
+            point[0] = -point[0]
 
         # store
-        tr_data_points[i] = transformed_point
+        tr_data_points[i] = point
 
     return tr_data_points
 
@@ -84,8 +82,8 @@ def load_bucket(bucket_file: str, transformation_file: str = None, flip: bool = 
         )
     else:
         # apply the scaling even if the transformation is not given
-        rotation = np.eye(3),  # identity
-        translation = np.zeros(3),  # [0,0,0]
+        rotation = np.eye(3)  # identity
+        translation = np.zeros(3)  # [0,0,0]
         data_points = transform_datapoints(
             data_points=data_points,
             dxyz=dxyz,
