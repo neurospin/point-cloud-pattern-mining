@@ -151,14 +151,15 @@ def load_buckets(bucket_folder: str, transformation_folder: str = None, flip: bo
     return output_data, output_raw, output_dxyz, output_tra, output_rot
 
 
-def align_buckets_by_ICP(volume_to_align: np.ndarray, ref_volume: np.ndarray):
-    """Align two volumes by icp"""
+def align_buckets_by_ICP(bucket_to_align: np.ndarray, ref_bucket: np.ndarray,
+    max_iter=1e3, epsilon=1e-2):
+    """Align two arrays of 3D coodrinates by icp"""
     # calculate ICP
     _, rot, tra = distance.calc_distance(
-        volume_to_align, ref_volume, 'icp',
-        max_iter=1e3, epsilon=1e-2)
-    # transform the sulcus with the ICP rotation matrix and translation vector
-    data_points = transform_datapoints(volume_to_align, (1, 1, 1), rot, tra)
+        bucket_to_align, ref_bucket, 'icp',
+        max_iter=max_iter, epsilon=epsilon)
+    # transform the bucket with the ICP rotation matrix and translation vector
+    data_points = transform_datapoints(bucket_to_align, (1, 1, 1), rot, tra)
 
     return data_points, rot, tra
 
