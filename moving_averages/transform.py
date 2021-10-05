@@ -188,7 +188,7 @@ def align_buckets_by_ICP_batch(volumes_dict: Sequence[np.ndarray], ref_subject_n
     if cores is None:
         cores = cpu_count()-3
 
-    print(cores)
+    log.info(f"using {cores} cores out of {cpu_count}")
     with Pool(cores) as p:
         icp_output = list(tqdm(p.imap(f, other_buckets), total=len(other_buckets),
                                desc="Aligning buckets to {}".format(ref_subject_name)))
@@ -203,3 +203,9 @@ def align_buckets_by_ICP_batch(volumes_dict: Sequence[np.ndarray], ref_subject_n
         translation_vectors.append(tra)
 
     return dict(zip(subjects, distance_matrices)), dict(zip(subjects, rotation_matrices)), dict(zip(subjects, translation_vectors))
+
+
+def sort_buckets(buckets:dict, isomap_df, axis:int):
+    """Sort the buckets according to their distance along the specified isomap axis."""
+    sorted_subjects = isomap_df.loc[:,axis].sort_values().keys()
+    return {subj:buckets[subj] for subj in sorted_subjects}

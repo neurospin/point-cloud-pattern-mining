@@ -50,7 +50,7 @@ def calc_one_MA_volume(buckets_dict, distance_df, axis_n, center, FWHM, min_weig
     """
 
     # get the weights for all subjects at position "center"
-    weigths = get_MA_gauss_weigths(distance_df, center, FWHM).iloc[:,axis_n]
+    weigths = get_MA_gauss_weigths(distance_df, center, FWHM).loc[:,axis_n]
     
     # Create a volume that includes all buckets
     d = buckets_dict
