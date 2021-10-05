@@ -152,7 +152,7 @@ def load_buckets(bucket_folder: str, transformation_folder: str = None, flip: bo
 
 
 def align_buckets_by_ICP(bucket_to_align: np.ndarray, ref_bucket: np.ndarray,
-    max_iter=1e3, epsilon=1e-2):
+                         max_iter=1e3, epsilon=1e-2):
     """Align two arrays of 3D coodrinates by icp"""
     # calculate ICP
     _, rot, tra = distance.calc_distance(
@@ -164,26 +164,26 @@ def align_buckets_by_ICP(bucket_to_align: np.ndarray, ref_bucket: np.ndarray,
     return data_points, rot, tra
 
 
-def align_buckets_by_ICP_batch(volumes_dict: Sequence[np.ndarray], ref_subject_name: str, cores=None):
+def align_buckets_by_ICP_batch(buckets_dict: Sequence[np.ndarray], ref_subject_name: str, cores=None):
     """ Align all subjects in bucket_dict to a reference subject, using ICP.
 
-    This function is parallelized and uses all available CPUs.
+    This function is parallelized, it uses all CPUs minus 3 by default, if cores is not specified.
 
     Args:
-        volumes_dict (Sequence[np.ndarray]): dictionary of volumes indexed by subject names
+        buckets_dict (Sequence[np.ndarray]): dictionary of volumes indexed by subject names
         ref_jubject_name (str): name of the reference subject to which the other are aligned
 
     Returns:
         dict: a dictionary of aligned buckets indexed by subject name
     """
-    assert ref_subject_name in volumes_dict
+    assert ref_subject_name in buckets_dict
 
-    model_bucket = volumes_dict[ref_subject_name]
-    subjects = volumes_dict.keys()
+    model_bucket = buckets_dict[ref_subject_name]
+    subjects = buckets_dict.keys()
     # TODO make sure the order is the same here
-    other_buckets = volumes_dict.values()
+    other_buckets = buckets_dict.values()
 
-    f = partial(align_buckets_by_ICP, ref_volume=model_bucket)
+    f = partial(align_buckets_by_ICP, ref_bucket=model_bucket)
 
     if cores is None:
         cores = cpu_count()-3
@@ -205,7 +205,7 @@ def align_buckets_by_ICP_batch(volumes_dict: Sequence[np.ndarray], ref_subject_n
     return dict(zip(subjects, distance_matrices)), dict(zip(subjects, rotation_matrices)), dict(zip(subjects, translation_vectors))
 
 
-def sort_buckets(buckets:dict, isomap_df, axis:int):
+def sort_buckets(buckets: dict, isomap_df, axis: int):
     """Sort the buckets according to their distance along the specified isomap axis."""
-    sorted_subjects = isomap_df.loc[:,axis].sort_values().keys()
-    return {subj:buckets[subj] for subj in sorted_subjects}
+    sorted_subjects = isomap_df.loc[:, axis].sort_values().keys()
+    return {subj: buckets[subj] for subj in sorted_subjects}
