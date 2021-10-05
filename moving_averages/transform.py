@@ -188,7 +188,7 @@ def align_buckets_by_ICP_batch(buckets_dict: Sequence[np.ndarray], ref_subject_n
     if cores is None:
         cores = cpu_count()-3
 
-    log.info(f"using {cores} cores out of {cpu_count}")
+    log.info(f"using {cores} cores out of {cpu_count()}")
     with Pool(cores) as p:
         icp_output = list(tqdm(p.imap(f, other_buckets), total=len(other_buckets),
                                desc="Aligning buckets to {}".format(ref_subject_name)))
