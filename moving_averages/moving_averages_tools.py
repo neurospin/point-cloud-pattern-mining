@@ -1,13 +1,15 @@
-import numpy, pandas
+import numpy
+import pandas
 from numpy.core import numeric
 from multiprocessing import Pool, cpu_count
 from functools import partial
 from tqdm import tqdm
 from scipy.ndimage import gaussian_filter
 
-def get_MA_gauss_weigths(coords_df:pandas.DataFrame, center:numeric, FWHM:numeric, normalized=True):
+
+def get_MA_gauss_weigths(coords_df: pandas.DataFrame, center: numeric, FWHM: numeric, normalized=True):
     """ Get the SPAM Gaussian weights for each subject and each axis in isomap_axis_df
-    
+
     Args:
         coords_df (pandas.DataFrame or numpy.ndarray): the coordinates of each subject,
             generally this is the ouptup of the isomap calculation (all axis)
@@ -18,17 +20,17 @@ def get_MA_gauss_weigths(coords_df:pandas.DataFrame, center:numeric, FWHM:numeri
     Returns:
         same type as coords_df: SPAM weights
     """
-    std = FWHM/2.3548200450309493 # = 2*sqr(2*log(2))
+    std = FWHM/2.3548200450309493  # = 2*sqr(2*log(2))
     w = numpy.exp(-(coords_df-center)**2/(2*std**2))
     if normalized:
         w = w/w.sum()
     return w
 
 
-_f_round = lambda x : numpy.round(x).astype(numpy.int64)
+def _f_round(x): return numpy.round(x).astype(numpy.int64)
 
 
-def calc_one_MA_volume(buckets_dict, distance_df, axis_n, center, FWHM, min_weight=1e-4):
+def calc_one_MA_volume(buckets_dict, distance_df, axis_n, center, FWHM, min_weight=1e-2):
     """Calculate the moving average of the buckets as 3D image, centered in 'center'
 
     Each point of each bucket is contributes with a weight calculated
@@ -46,18 +48,18 @@ def calc_one_MA_volume(buckets_dict, distance_df, axis_n, center, FWHM, min_weig
         min_weight (float in [0,1]) : Subjects with weight lower than this are skipped
 
     Returns:
-        [type]: [description]
+        tuple : (MA as volume, shift)
+        the shift vector should be summed to the image coordinates to translate the MA in the original space of the buckets.
     """
 
     # get the weights for all subjects at position "center"
-    weigths = get_MA_gauss_weigths(distance_df, center, FWHM).iloc[:,axis_n]
-    
+    weigths = get_MA_gauss_weigths(distance_df, center, FWHM).loc[:, axis_n]
+
     # Create a volume that includes all buckets
     d = buckets_dict
-    x = numpy.concatenate([d[s][:,0] for s in d.keys()])
-    y = numpy.concatenate([d[s][:,1] for s in d.keys()])
-    z = numpy.concatenate([d[s][:,2] for s in d.keys()])
-
+    x = numpy.concatenate([d[s][:, 0] for s in d.keys()])
+    y = numpy.concatenate([d[s][:, 1] for s in d.keys()])
+    z = numpy.concatenate([d[s][:, 2] for s in d.keys()])
 
     xmin = x.min()
     ymin = y.min()
@@ -67,7 +69,7 @@ def calc_one_MA_volume(buckets_dict, distance_df, axis_n, center, FWHM, min_weig
     ymax = y.max()
     zmax = z.max()
 
-    shape = _f_round(numpy.array((xmax-xmin+1,ymax-ymin+1,zmax-zmin+1)))
+    shape = _f_round(numpy.array((xmax-xmin+1, ymax-ymin+1, zmax-zmin+1)))
     vol = numpy.zeros(shape)
 
     # per each point in each bucket, add the subject's weight to the corresponding voxel in the volume
@@ -75,14 +77,14 @@ def calc_one_MA_volume(buckets_dict, distance_df, axis_n, center, FWHM, min_weig
         if weigths[subject] < min_weight:
             # discard subjects with very low weights
             continue
-        bucket = _f_round((bucket - (xmin,ymin,zmin)))
-        for x,y,z in bucket:
+        bucket = _f_round((bucket - (xmin, ymin, zmin)))
+        for x, y, z in bucket:
             assert x >= 0, x
             assert y >= 0, y
             assert z >= 0, z
-            vol[x,y,z]+=weigths[subject]
-            
-    return vol
+            vol[x, y, z] += weigths[subject]
+
+    return vol, numpy.round((xmin, ymin, zmin)).astype(int)
 
 
 def calc_MA_volumes_batch(centers, buckets_dict, distance_df, axis_n, FWHM):
@@ -93,12 +95,14 @@ def calc_MA_volumes_batch(centers, buckets_dict, distance_df, axis_n, FWHM):
                 distance_df,
                 axis_n,
                 FWHM=FWHM)
-    
+
     with Pool(cpu_count()) as p:
-        volumes = list(tqdm(p.imap(f, centers), total=len(centers),
-            desc="Calculating moving averages"))
-        
-    return dict(zip(centers, volumes))
+        results = list(tqdm(p.imap(f, centers), total=len(centers),
+                            desc="Calculating moving averages"))
+
+    volumes, shifts = list(zip(*results))
+
+    return dict(zip(centers, volumes)), dict(zip(centers, shifts))
 
 
 def MA_volumes_to_buckets(volumes_dict, q=0.3, FWHM=1):
@@ -114,12 +118,12 @@ def MA_volumes_to_buckets(volumes_dict, q=0.3, FWHM=1):
     Returns:
         dict : a dictionary of buckets. The keys are the moving-average centers.
     """
-    buckets=dict()
-    assert q<=1 and q >=0, "q is a quantile, it must be in [0,1]"
-    
-    for k,x in volumes_dict.items():
-        x = gaussian_filter(x,FWHM)
-        xq = numpy.quantile(x[x>0], q)
-        x[x<=xq] = 0
+    buckets = dict()
+    assert q <= 1 and q >= 0, "q is a quantile, it must be in [0,1]"
+
+    for k, x in volumes_dict.items():
+        x = gaussian_filter(x, FWHM)
+        xq = numpy.quantile(x[x > 0], q)
+        x[x <= xq] = 0
         buckets[k] = numpy.argwhere(x)
     return buckets
