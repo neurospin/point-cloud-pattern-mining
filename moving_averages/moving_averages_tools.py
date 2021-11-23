@@ -30,7 +30,7 @@ def get_MA_gauss_weigths(coords_df: pandas.DataFrame, center: numeric, FWHM: num
 def _f_round(x): return numpy.round(x).astype(numpy.int64)
 
 
-def calc_one_MA_volume(buckets_dict, distance_df, axis_n, center, FWHM, min_weight=1e-2):
+def calc_one_MA_volume(buckets_dict, distance_df, axis_n, center, FWHM, min_weight=None):
     """Calculate the moving average of the buckets as 3D image, centered in 'center'
 
     Each point of each bucket is contributes with a weight calculated
@@ -74,7 +74,7 @@ def calc_one_MA_volume(buckets_dict, distance_df, axis_n, center, FWHM, min_weig
 
     # per each point in each bucket, add the subject's weight to the corresponding voxel in the volume
     for subject, bucket in d.items():
-        if weigths[subject] < min_weight:
+        if (min_weight is not None) and (weigths[subject] < min_weight):
             # discard subjects with very low weights
             continue
         bucket = _f_round((bucket - (xmin, ymin, zmin)))
