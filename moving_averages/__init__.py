@@ -1,5 +1,5 @@
 from . import moving_averages_tools
-from .moving_averages_tools import calc_MA_volumes_batch
+from .moving_averages_tools import calc_MA_volumes_batch, calc_MA_volumes_with_alignment
 from . import files_utils
 from .plot import plot_sulci, draw_isomap_embedding
 from .distance import calc_all_icp, find_MAD_outliers, get_center_subject

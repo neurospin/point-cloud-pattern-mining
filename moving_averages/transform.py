@@ -164,7 +164,7 @@ def align_buckets_by_ICP(bucket_to_align: np.ndarray, ref_bucket: np.ndarray,
     return data_points, rot, tra
 
 
-def align_buckets_by_ICP_batch(buckets_dict: Sequence[np.ndarray], ref_subject_name: str, cores=None):
+def align_buckets_by_ICP_batch(buckets_dict: Sequence[np.ndarray], ref_subject_name: str, cores=None, verbose=True):
     """ Align all subjects in bucket_dict to a reference subject, using ICP.
 
     This function is parallelized, it uses all CPUs minus 3 by default, if cores is not specified.
@@ -188,10 +188,15 @@ def align_buckets_by_ICP_batch(buckets_dict: Sequence[np.ndarray], ref_subject_n
     if cores is None:
         cores = cpu_count()-3
 
-    log.info(f"using {cores} cores out of {cpu_count()}")
-    with Pool(cores) as p:
-        icp_output = list(tqdm(p.imap(f, other_buckets), total=len(other_buckets),
-                               desc="Aligning buckets to {}".format(ref_subject_name)))
+    if verbose:
+        log.info(f"using {cores} cores out of {cpu_count()}")
+
+        with Pool(cores) as p:
+            icp_output = list(tqdm(p.imap(f, other_buckets), total=len(other_buckets),
+                                desc="Aligning buckets to {}".format(ref_subject_name)))
+    else:
+        with Pool(cores) as p:
+            icp_output = p.map(f, other_buckets)
 
     distance_matrices = []
     rotation_matrices = []
