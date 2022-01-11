@@ -14,7 +14,7 @@ setuptools.setup(name='moving_averages',
     long_description_content_type="text/markdown",
     author_email='marpas.paris@gmail.com',
     url='',
-    packages=['moving_averages', 'moving_averages.distance'],
+    packages=['moving_averages', 'moving_averages.distance', 'moving_averages.isomap'],
     install_requires=['plotly==4.14.3', 'scipy>=0.22'],
     entry_points = {
     'console_scripts': [
