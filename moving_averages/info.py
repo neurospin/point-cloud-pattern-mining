@@ -35,13 +35,20 @@ LICENSE = "CeCILL-B"
 AUTHOR = 'Marco Pascucci - NeuroSpin (CEA)'
 AUTHOR_EMAIL = 'marpas.paris@gmail.com'
 PLATFORMS = "OS Independent"
-PROVIDES = ["moving_averages"]
+PROVIDES = ['moving_averages', 'moving_averages.distance',
+            'moving_averages.isomap']
 REQUIRES = ['plotly==4.14.3', 'scipy>=0.22']
 EXTRA_REQUIRES = {
     "doc": ["sphinx>=" + SPHINX_MIN_VERSION],
 }
 # from python 3.6, dictionary order is preserved during execution
 PYTHON_REQUIRES = '>=3.6'
+ENTRYPOINTS = {
+    'console_scripts': [
+        'mav_volume_to_points_cloud=moving_averages.cli.volume_to_points_cloud:main',
+        'mav_icp=moving_averages.cli.icp:main'
+        ],
+    }
 
 brainvisa_build_model = 'pure_python'
 
