@@ -1,4 +1,5 @@
 import setuptools
+import os
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -14,13 +15,13 @@ setuptools.setup(
     version=release_info['__version__'],
     description=release_info['DESCRIPTION'],
     author=release_info['AUTHOR'],
-    author_email=release_info['AUTHOR_EMAIL']
+    author_email=release_info['AUTHOR_EMAIL'],
     long_description=long_description,
     long_description_content_type="text/markdown",
     url=release_info['URL'],
     packages=release_info['PROVIDES'],
     install_requires=release_info["REQUIRES"],
-    classifiers=release_info["CLASSIFIERS"]
+    classifiers=release_info["CLASSIFIERS"],
     python_requires=release_info['PYTHON_REQUIRES'],
-    entry_points = release_info['ENTRYPOINTS'],
+    entry_points=release_info['ENTRYPOINTS'],
 )
