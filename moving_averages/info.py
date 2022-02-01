@@ -37,7 +37,7 @@ AUTHOR_EMAIL = 'marpas.paris@gmail.com'
 PLATFORMS = "OS Independent"
 PROVIDES = ['moving_averages', 'moving_averages.distance',
             'moving_averages.isomap']
-REQUIRES = ['plotly==4.14.3', 'scipy>=0.22']
+REQUIRES = ['scipy>=0.22']
 EXTRA_REQUIRES = {
     "doc": ["sphinx>=" + SPHINX_MIN_VERSION],
 }
@@ -47,8 +47,7 @@ ENTRYPOINTS = {
     'console_scripts': [
         'mav_volume_to_points_cloud=moving_averages.cli.volume_to_points_cloud:main',
         'mav_icp=moving_averages.cli.icp:main'
-        ],
-    }
+    ],
+}
 
 brainvisa_build_model = 'pure_python'
-
