@@ -37,7 +37,8 @@ AUTHOR_EMAIL = 'marpas.paris@gmail.com'
 PLATFORMS = "OS Independent"
 PROVIDES = ['moving_averages', 'moving_averages.distance',
             'moving_averages.isomap']
-REQUIRES = ['scipy>=0.22']
+REQUIRES = ['scipy>=0.22',
+            'dico_toolbox @ git+https://github.com/neurospin/dico_toolbox.git#Dev']
 EXTRA_REQUIRES = {
     "doc": ["sphinx>=" + SPHINX_MIN_VERSION],
 }
