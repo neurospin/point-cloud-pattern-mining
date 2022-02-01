@@ -79,7 +79,7 @@ def calc_all_distances(sulci: Sequence[numpy.ndarray],
     if n_cpu_max is None:
         n_cpu_max = cpu_count()
     else:
-        n_cpu_max = min(cpu_count, n_cpu_max)
+        n_cpu_max = min(cpu_count(), n_cpu_max)
 
     if indexes == 'all':
         # calc distances for all sulci
@@ -153,9 +153,10 @@ def find_MAD_outliers(distance_df: pandas.DataFrame, sd_factor: int = 3):
 
 # TODO: outliers par pourcentage de population
 
-def get_center_subject(distances_df:pandas.DataFrame):
+
+def get_center_subject(distances_df: pandas.DataFrame):
     """Get the name of the central subject.
-    
+
     The center subject is the one that is closer to all the others.
 
     :param distances_df: a symmetric distance DataFrame,

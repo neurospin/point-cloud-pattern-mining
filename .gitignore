@@ -1,6 +1,5 @@
 zsun/
 .vscode
-docs
 *.rst
 example_ophelie
 new_experiment
@@ -9,6 +8,7 @@ sep19_v2
 cestino
 bucket_extraction_bv_process/
 data/
+build/
 
 __pycache__/
 *.py[cod]
