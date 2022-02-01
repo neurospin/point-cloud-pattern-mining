@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 release_info = {}
 python_dir = os.path.dirname(__file__)
-with open(os.path.join(python_dir, "moving_averages", "info.py")) as f:
+with open(os.path.join(python_dir, "pcpm", "info.py")) as f:
     code = f.read()
     exec(code, release_info)
 

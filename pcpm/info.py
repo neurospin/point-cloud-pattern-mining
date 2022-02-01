@@ -23,7 +23,7 @@ description = "Tools for the calculation of moving averages of 3D objects"
 SPHINX_MIN_VERSION = '1.0'
 
 # Main setup parameters
-NAME = 'moving_averages'
+NAME = 'Point_cloud_pattern_mining'
 PROJECT = 'point-cloud-pattern-mining'
 ORGANISATION = "neurospin"
 MAINTAINER = "nobody"
@@ -35,9 +35,9 @@ LICENSE = "CeCILL-B"
 AUTHOR = 'Marco Pascucci - NeuroSpin (CEA)'
 AUTHOR_EMAIL = 'marpas.paris@gmail.com'
 PLATFORMS = "OS Independent"
-PROVIDES = ['moving_averages', 'moving_averages.distance',
-            'moving_averages.isomap']
-REQUIRES = ['scipy>=0.22',
+PROVIDES = ['pcpm', 'pcpm.distance',
+            'pcpm.isomap']
+REQUIRES = ['scipy>=0.22', "pandas",
             'dico_toolbox @ git+https://github.com/neurospin/dico_toolbox.git#Dev']
 EXTRA_REQUIRES = {
     "doc": ["sphinx>=" + SPHINX_MIN_VERSION],
