@@ -35,8 +35,7 @@ LICENSE = "CeCILL-B"
 AUTHOR = 'Marco Pascucci - NeuroSpin (CEA)'
 AUTHOR_EMAIL = 'marpas.paris@gmail.com'
 PLATFORMS = "OS Independent"
-PROVIDES = ['pcpm', 'pcpm.distance',
-            'pcpm.isomap']
+PROVIDES = ['pcpm', 'pcpm.distance', 'pcpm.isomap', 'pcpm.cli']
 REQUIRES = ['scipy>=0.22', "pandas", "numpy", "tqdm", "sklearn", "matplotlib",
             'dico_toolbox @ git+https://github.com/neurospin/dico_toolbox.git#Dev']
 EXTRA_REQUIRES = {
@@ -46,8 +45,8 @@ EXTRA_REQUIRES = {
 PYTHON_REQUIRES = '>=3.6'
 ENTRYPOINTS = {
     'console_scripts': [
-        'mav_volume_to_points_cloud=moving_averages.cli.volume_to_points_cloud:main',
-        'mav_icp=moving_averages.cli.icp:main'
+        'pcpm_volume_to_point_cloud=pcpm.cli.volume_to_point_cloud:main',
+        'pcpm_icp=pcpm.cli.icp:main'
     ],
 }
 
