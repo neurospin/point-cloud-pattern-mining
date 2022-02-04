@@ -1,2 +1,3 @@
-from .isomap import *
-from .io import *
+from .isomap import get_isomap
+from .io import load_icp_result, load_pcs_from_npz, subset_of_distances, subset_of_pcs
+from .clusters import labels_to_names, split_pcs_in_clusters

@@ -62,9 +62,9 @@ def weights_for_moving_averages(centers, FWHM, max):
         plt.plot(centers, numpy.zeros(len(centers)), 'or', label="centers")
 
 
-def clustering(data: pandas.DataFrame, labels, cmap='Accent', **kwargs):
-    df = pandas.DataFrame(data)
-    cmap = matplotlib.cm.get_cmap(cmap, labels.max())
+def clustering(data: pandas.DataFrame, labels, cmap='tab10', **kwargs):
+    df = pandas.DataFrame(data).copy()
+    cmap = matplotlib.cm.get_cmap(cmap)
     df['label'] = labels
     df['color'] = list(map(cmap, labels))
 
@@ -74,7 +74,9 @@ def clustering(data: pandas.DataFrame, labels, cmap='Accent', **kwargs):
         for label in set(labels):
             plt.hist(df.loc[df.label == label].iloc[:, 0], **kwargs)
     elif embedding_dim == 2:
-        df.plot.scatter(1, 2, c=df.loc[:, "color"])
+        df.plot.scatter(*df.columns[0:2], c=df.loc[:, "color"])
+        for l in set(labels):
+            plt.scatter([], [], label=l)
     else:
         raise NotImplementedError(
             "Not available for embedding of dimension > 2")
