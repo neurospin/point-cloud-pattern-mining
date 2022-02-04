@@ -4,6 +4,7 @@ import pandas
 from os import path as _path
 from re import A, match as _re_match
 from ..distance.core import ICP_result
+from typing import Sequence
 
 
 def load_pcs_from_npz(filename: str) -> dict:
@@ -53,7 +54,7 @@ def load_icp_result(csv_path: str, npz_path: str = None) -> dict:
     return ICP_result(dist, rots, trans)
 
 
-def subset_of_pcs(pcs: dict, names: "list[str]") -> dict:
+def subset_of_pcs(pcs: dict, names: Sequence[str]) -> dict:
     """Get a subset of the point-clouds corresponding to the given names.
 
     Args:
@@ -66,7 +67,7 @@ def subset_of_pcs(pcs: dict, names: "list[str]") -> dict:
     return {name: pcs[name] for name in names}
 
 
-def subset_of_distances(distances: pandas.DataFrame, names: "list[str]") -> pandas.DataFrame:
+def subset_of_distances(distances: pandas.DataFrame, names: Sequence[str]) -> pandas.DataFrame:
     """Return a distance matric corresponding to the specified names
 
     Args:
