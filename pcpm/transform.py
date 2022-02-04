@@ -151,39 +151,40 @@ def load_buckets(bucket_folder: str, transformation_folder: str = None, flip: bo
     return output_data, output_raw, output_dxyz, output_tra, output_rot
 
 
-def align_buckets_by_ICP(bucket_to_align: np.ndarray, ref_bucket: np.ndarray,
-                         max_iter=1e3, epsilon=1e-2):
-    """Align two arrays of 3D coodrinates by icp"""
+def align_pc_pair(pc_to_align: np.ndarray, reference_pc: np.ndarray,
+                  max_iter=1e3, epsilon=1e-2):
+    """Align two point-clouds by ICP"""
     # calculate ICP
     _, rot, tra = distance.calc_distance(
-        bucket_to_align, ref_bucket, 'icp',
+        pc_to_align, reference_pc, 'icp',
         max_iter=max_iter, epsilon=epsilon)
     # transform the bucket with the ICP rotation matrix and translation vector
-    data_points = transform_datapoints(bucket_to_align, (1, 1, 1), rot, tra)
+    data_points = transform_datapoints(pc_to_align, (1, 1, 1), rot, tra)
 
     return data_points, rot, tra
 
 
-def align_buckets_by_ICP_batch(buckets_dict: Sequence[np.ndarray], ref_subject_name: str, cores=None, verbose=True):
-    """ Align all subjects in bucket_dict to a reference subject, using ICP.
+def align_pcs(pcs: Sequence[np.ndarray], reference_pc_name: str, cores=None, verbose=True):
+    """ Align the given point-clouds to a reference point-cloud, using ICP.
 
     This function is parallelized, it uses all CPUs minus 3 by default, if cores is not specified.
 
     Args:
-        buckets_dict (Sequence[np.ndarray]): dictionary of volumes indexed by subject names
-        ref_jubject_name (str): name of the reference subject to which the other are aligned
+        pcs (Sequence[np.ndarray]): dictionary of point-clouds indexed by subject names
+        reference_pc_name (str): name of the reference point-cloud to which the other are aligned.
+            It must be in the keys of pcs
 
     Returns:
         dict: a dictionary of aligned buckets indexed by subject name
     """
-    assert ref_subject_name in buckets_dict
+    assert reference_pc_name in pcs
 
-    model_bucket = buckets_dict[ref_subject_name]
-    subjects = buckets_dict.keys()
+    model_bucket = pcs[reference_pc_name]
+    subjects = pcs.keys()
     # TODO make sure the order is the same here
-    other_buckets = buckets_dict.values()
+    other_pcs = pcs.values()
 
-    f = partial(align_buckets_by_ICP, ref_bucket=model_bucket)
+    f = partial(align_pc_pair, reference_pc=model_bucket)
 
     if cores is None:
         cores = cpu_count()-3
@@ -192,11 +193,11 @@ def align_buckets_by_ICP_batch(buckets_dict: Sequence[np.ndarray], ref_subject_n
         log.info(f"using {cores} cores out of {cpu_count()}")
 
         with Pool(cores) as p:
-            icp_output = list(tqdm(p.imap(f, other_buckets), total=len(other_buckets),
-                                desc="Aligning buckets to {}".format(ref_subject_name)))
+            icp_output = list(tqdm(p.imap(f, other_pcs), total=len(other_pcs),
+                                   desc="Aligning point-clouds to {}".format(reference_pc_name)))
     else:
         with Pool(cores) as p:
-            icp_output = p.map(f, other_buckets)
+            icp_output = p.map(f, other_pcs)
 
     distance_matrices = []
     rotation_matrices = []
