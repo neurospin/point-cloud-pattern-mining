@@ -1,9 +1,13 @@
+import warnings
 from scipy.stats import norm
 import pandas
 import numpy
 import matplotlib.pyplot as plt
 import matplotlib
-import warnings
+import logging
+
+log = logging.getLogger(__name__)
+
 warnings.filterwarnings("ignore", module=".*pandas*")
 
 
@@ -23,7 +27,7 @@ def isomap_embedding(isomap: pandas.Series, axes=None, figsize=None, **kwargs):
     if axes is not None:
         embedding = isomap.loc[:, axes]
 
-    embedding_dim = len(embedding.shape)
+    embedding_dim = len(embedding.iloc[0])
 
     # "The centers must have the same dimensionality of the embedding"
 
@@ -64,11 +68,12 @@ def weights_for_moving_averages(centers, FWHM, max):
 
 def clustering(data: pandas.DataFrame, labels, cmap='tab10', **kwargs):
     df = pandas.DataFrame(data).copy()
+    embedding_dim = len(df.iloc[0])
     cmap = matplotlib.cm.get_cmap(cmap)
     df['label'] = labels
     df['color'] = list(map(cmap, labels))
 
-    embedding_dim = embedding_dim = len(data.shape)
+    print(embedding_dim)
 
     if embedding_dim == 1:
         for label in set(labels):
@@ -78,5 +83,4 @@ def clustering(data: pandas.DataFrame, labels, cmap='tab10', **kwargs):
         for l in set(labels):
             plt.scatter([], [], label=l)
     else:
-        raise NotImplementedError(
-            "Not available for embedding of dimension > 2")
+        log.warning("Not available for embedding of dimension > 2")
