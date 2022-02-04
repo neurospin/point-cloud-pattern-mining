@@ -5,7 +5,7 @@ from multiprocessing import Pool, cpu_count
 from functools import partial
 from tqdm import tqdm
 from scipy.ndimage import gaussian_filter
-from .transform import align_buckets_by_ICP_batch
+from .transform import align_pcs
 import numpy as _np
 from tqdm import tqdm as _tqdm
 
@@ -37,7 +37,7 @@ def find_closest_subject_on_axis(coordinate, distance_df, axis_n):
     """Find the subject that is closest to the specified coordinate
     in the specified axis of the given distance matrix"""
 
-    return (_np.abs(distance_df.loc[:,axis_n] - coordinate)).idxmin()
+    return (_np.abs(distance_df.loc[:, axis_n] - coordinate)).idxmin()
 
 
 def calc_one_MA_volume(buckets_dict, distance_df, axis_n, center, FWHM, min_weight=None, align_to_center=False):
@@ -72,14 +72,15 @@ def calc_one_MA_volume(buckets_dict, distance_df, axis_n, center, FWHM, min_weig
     # TODO cut subjects that are at more than n standatd devientions
     # eliminate low_weigth subjects
     if (min_weight is not None):
-        d = {name:bucket for name, bucket in buckets_dict.items() if weigths[name] > min_weight}
+        d = {name: bucket for name, bucket in buckets_dict.items()
+             if weigths[name] > min_weight}
         # print(len(buckets_dict), len(d) )
-
 
     # alignment
     if align_to_center:
-        closest_subj = find_closest_subject_on_axis(center, distance_df, axis_n)
-        d, _, _ = align_buckets_by_ICP_batch(d, closest_subj, verbose=False)
+        closest_subj = find_closest_subject_on_axis(
+            center, distance_df, axis_n)
+        d, _, _ = align_pcs(d, closest_subj, verbose=False)
 
     # Create a volume that includes all buckets
 
@@ -97,7 +98,6 @@ def calc_one_MA_volume(buckets_dict, distance_df, axis_n, center, FWHM, min_weig
 
     shape = _f_round(numpy.array((xmax-xmin+1, ymax-ymin+1, zmax-zmin+1)))
     vol = numpy.zeros(shape)
-    
 
     # per each point in each bucket, add the subject's weight to the corresponding voxel in the volume
     for subject, bucket in d.items():

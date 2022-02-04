@@ -2,12 +2,25 @@ import pandas
 from tqdm import tqdm
 from functools import partial
 from multiprocessing import Pool, cpu_count
-import numpy
+import numpy as _np
 from . import functions
 from typing import Sequence
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class ICP_result:
+    def __init__(self, distances, rotations, translations):
+        self.dist = distances
+        self.rotations = rotations
+        self.translations = translations
+        self.names = distances.index.values.tolist()
+        self.dist_min = _np.minimum(distances, distances.T)
+        self.dist_max = _np.maximum(distances, distances.T)
+
+    def __repr__(self):
+        return f"ICP result containing {len(self.names)} entries"
 
 
 # a map of distance types and the corresponding distance calculating function
@@ -30,7 +43,7 @@ def _get_distance_f(x):
     return distance_f
 
 
-def calc_distance(a1: numpy.ndarray, a2: numpy.ndarray, distance_f: str = 'icp', **kwargs):
+def calc_distance(a1: _np.ndarray, a2: _np.ndarray, distance_f: str = 'icp', **kwargs):
     """Calculate the distance between arrays a1 and a2.
     The distance type is specified in the distance_f argument, it must be a string or a function.
     kwargs are passed to the distance function.
@@ -38,8 +51,8 @@ py
     The distance functions implemented in this module can be found in sulci_isomap.distance.functions
 
     Args:
-        a1 (numpy.ndarray): first array of points (NxD where D is the point dimensions number)
-        a2 (numpy.ndarray): second array of points (MxD)
+        a1 (_np.ndarray): first array of points (NxD where D is the point dimensions number)
+        a2 (_np.ndarray): second array of points (MxD)
         distance_f (str, optional): type of distance. Defaults to 'icp'
 
     Raises:
@@ -54,7 +67,7 @@ py
     return distance_f(a1.T, a2.T, **kwargs)
 
 
-def calc_all_distances(sulci: Sequence[numpy.ndarray],
+def calc_all_distances(sulci: Sequence[_np.ndarray],
                        distance_f: str,
                        indexes: Sequence[int] = 'all',
                        n_cpu_max=None, **kwargs):
@@ -97,25 +110,25 @@ def calc_all_distances(sulci: Sequence[numpy.ndarray],
     return dist_results
 
 
-def calc_all_icp(sulci: Sequence[numpy.ndarray], n_cpu_max: int = None):
+def calc_all_icp(sulci: Sequence[_np.ndarray], n_cpu_max: int = None):
     """"Run icp between all pairs of sulci
 
     :param sulci: list of sulci (M, Nx3)
-    :type sulci: Sequence[numpy.ndarray]
+    :type sulci: Sequence[_np.ndarray]
     :param n_cpu_max: max number of CPUs used, defaults to None (all available)
     :type n_cpu_max: int, optional
     :return: distance matrix, rotations, translations
-    :rtype: list of numpy.ndarray (NxNx1, NxNx3x3, NxNx3)
+    :rtype: list of _np.ndarray (NxNx1, NxNx3x3, NxNx3)
     """
     d = calc_all_distances(sulci, distance_f='icp', n_cpu_max=n_cpu_max)
-    dt = numpy.dtype([
-        ('distance', numpy.float),
-        ('rotation', numpy.float, (3, 3)),
-        ('translation', numpy.float, (3))
+    dt = _np.dtype([
+        ('distance', _np.float),
+        ('rotation', _np.float, (3, 3)),
+        ('translation', _np.float, (3))
     ])
-    a = numpy.array(d, dtype=dt)
+    a = _np.array(d, dtype=dt)
 
-    return a['distance'], a['rotation'], a['translation']
+    return ICP_result(a['distance'], a['rotation'], a['translation'])
 
 
 def find_MAD_outliers(distance_df: pandas.DataFrame, sd_factor: int = 3):
@@ -136,17 +149,17 @@ def find_MAD_outliers(distance_df: pandas.DataFrame, sd_factor: int = 3):
     sum_distances = distance_df.sum(axis=1)
 
     # median
-    med_sum_dist = numpy.median(sum_distances)
+    med_sum_dist = _np.median(sum_distances)
     # difference from the median
-    deltas = numpy.abs(sum_distances - med_sum_dist)
+    deltas = _np.abs(sum_distances - med_sum_dist)
     # median of the difference with the median
-    med_deltas = numpy.median(deltas)
+    med_deltas = _np.median(deltas)
     # distance threshold to discard outliers
     distance_th = med_sum_dist + sd_factor*med_deltas
 
     outliers_mask = sum_distances <= distance_th
 
-    outlier_names = subjects[numpy.logical_not(outliers_mask)]
+    outlier_names = subjects[_np.logical_not(outliers_mask)]
     valid_names = subjects[outliers_mask]
 
     return outlier_names.tolist(), valid_names.tolist()
