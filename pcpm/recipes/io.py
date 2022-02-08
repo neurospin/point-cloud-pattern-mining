@@ -54,6 +54,16 @@ def load_icp_result(csv_path: str, npz_path: str = None) -> dict:
     return ICP_result(dist, rots, trans)
 
 
+def save_point_clouds_as_npz(pcs: dict, path: str) -> None:
+    """Save the given point clouds as compressed numpy array (.npz)
+
+    Args:
+        pcs (dict): a name:ndarray dictionnary containing the point-clouds
+        path (str): the path of the output file
+    """
+    numpy.savez_compressed(path, **pcs)
+
+
 def subset_of_pcs(pcs: dict, names: Sequence[str]) -> dict:
     """Get a subset of the point-clouds corresponding to the given names.
 
