@@ -6,6 +6,8 @@ import numpy
 import pandas
 from scipy.fftpack import shift
 from scipy.stats import norm
+from ..transform import align_pcs
+from ..embedding import find_central_pcs_name
 
 
 class Average_result:
@@ -44,7 +46,8 @@ def _get_weights(embedding: pandas.DataFrame, center: str or Sequence[float or i
     std = FWHM/2.3548200450309493  # = 2*sqr(2*log(2))
 
     if isinstance(center, str):
-        center = embedding[center]
+        assert center in embedding.index, "center not in embedding"
+        center = embedding.loc[center]
     else:
         center = numpy.array(center)
 
@@ -63,7 +66,7 @@ def _get_weights(embedding: pandas.DataFrame, center: str or Sequence[float or i
     return w
 
 
-def average_pcs_w(point_clouds: dict, weights: Sequence[float]) -> Average_result:
+def average_pcs_w(point_clouds: dict, weights: Sequence[float], normalize: bool) -> Average_result:
     """Return a weighted average of the given point-clouds."""
 
     d = point_clouds
@@ -93,37 +96,72 @@ def average_pcs_w(point_clouds: dict, weights: Sequence[float]) -> Average_resul
             assert x >= 0, x
             assert y >= 0, y
             assert z >= 0, z
-            vol[x, y, z] += weights[name]
+            vol[x, y, z] += weight
+
+    if normalize:
+        vol = (vol-vol.min())/(vol.max()-vol.min())
 
     return Average_result(vol, numpy.round((xmin, ymin, zmin)).astype(int), n=len(point_clouds))
 
 
-# def average_pcs(point_clouds: pandas.DataFrame, embedding: pandas.DataFrame, FWHM: float,
-#                 center: str or Sequence[float] = None) -> Average_result:
-#     """Return a weighted average of the given point-clouds."""
+def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, reference: str, FWHM: float, normalize: bool = True) -> Average_result:
+    """Return a weighted average of the given point-clouds.
 
-#     names = point_clouds.keys()
-#     embedding = embedding.loc[names]
-
-#     weights = _get_weights(embedding, center, FWHM)
-
-#     return average_pcs_w(point_clouds, weights)
+    Weights in [0,1] are calculated with 1-dimensional Gaussian function of the distance (in the embedding) of each pc to the given reference.
 
 
-def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, FWHM: float,
-                cluster_n: int, labels: Sequence[int], centers: Sequence) -> Average_result:
-    """Return a weighted average of the given point-clouds."""
+    Args:
+        point_clouds (dict): [description]
+        embedding (pandas.DataFrame): [description]
+        reference (str): [description]
+        FWHM (float): [description]
+        normalize (bool, optional): map the output voxel values to [0,1]. Defaults to True. Defaults to True.
 
-    names = embedding.loc[labels == cluster_n].index.values
+    Returns:
+        Average_result: [description]
+    """
+
+    names = list(point_clouds.keys())
+
+    assert reference in names, "The reference is not in the point cloud keys"
+
     embedding = embedding.loc[names]
 
-    weights = _get_weights(embedding, centers[cluster_n], FWHM)
+    weights = _get_weights(embedding, reference, FWHM)
 
-    return average_pcs_w(point_clouds, weights)
+    return average_pcs_w(point_clouds, weights, normalize=normalize)
 
 
-# def average_pc_clusters(point_clouds: pandas.DataFrame, embedding: pandas.DataFrame,
-#                         labels: Sequence[str], centers):
-#     """Return the averages of the clusters of point clouds."""
+# # Generate average volumes per each cluster
+# def generate_average_volume(clusters, embedding, references: Sequence = None, normalize=True):
+#     """[summary]
 
-#     for
+#     Args:
+#         clusters (Sequence): a label:dict(pcs) dictionary of clusters of point clouds
+#         embedding (DataFrame): [description]
+#         references (Sequence, optional): [description]. Defaults to None.
+#         normalize (bool, optional): map the output voxel values to [0,1]. Defaults to True. Defaults to True.
+
+#     Returns:
+#         [type]: [description]
+#     """
+
+#     labels = list(clusters.keys())
+
+#     if references is None:
+#         # use the central point_cloud
+#         references = [find_central_pcs_name(
+#             embedding, labels=labels, cluster_label=label) for label in set(labels)]
+#     else:
+#         try:
+#             references.iter()
+#         except:
+#             raise ValueError(
+#                 "referencies must be an sequence of names or a function of the cluster labels")
+
+#     aligned, _, _ = pcpm.align_pcs(clusters[n], reference_name)
+#     return pcpm.average_pcs(aligned, embedding=embedding, reference=reference_name, FWHM=2000)
+#     if align_to is not None:
+#         aligned_clusters, _, _ = align_pcs(point_clouds, align_to)
+
+#     return average_pcs(aligned_clusters, embedding=embedding, FWHM=200, normalize=normalize)

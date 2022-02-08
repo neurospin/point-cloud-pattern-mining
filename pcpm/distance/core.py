@@ -165,21 +165,3 @@ def find_MAD_outliers(distance_df: pandas.DataFrame, sd_factor: int = 3):
     return outlier_names.tolist(), valid_names.tolist()
 
 # TODO: outliers par pourcentage de population
-
-
-def get_center_subject(distances_df: pandas.DataFrame):
-    """Get the name of the central subject.
-
-    The center subject is the one that is closer to all the others.
-
-    :param distances_df: a symmetric distance DataFrame,
-        the index contains the subjects names
-    :type distances_df: pandas.DataFrame
-    :return: the name of the center subject
-    :rtype: str
-    """
-    # distances from all other elements (sum over columns)
-    sum_of_dist = distances_df.sum(axis=1)
-    # The center subject is the one that is the less far from
-    # all the others
-    return sum_of_dist.sort_values().index[0]
