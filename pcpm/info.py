@@ -36,8 +36,7 @@ AUTHOR = 'Marco Pascucci - NeuroSpin (CEA)'
 AUTHOR_EMAIL = 'marpas.paris@gmail.com'
 PLATFORMS = "OS Independent"
 PROVIDES = ['pcpm', 'pcpm.distance', 'pcpm.isomap', 'pcpm.cli']
-REQUIRES = ['scipy>=0.22', "pandas", "numpy", "tqdm", "sklearn", "matplotlib",
-            'dico_toolbox @ git+https://github.com/neurospin/dico_toolbox.git#Dev']
+REQUIRES = ['scipy>=0.22', "pandas", "numpy", "tqdm", "sklearn", "matplotlib"]
 EXTRA_REQUIRES = {
     "doc": ["sphinx>=" + SPHINX_MIN_VERSION],
 }
@@ -45,7 +44,6 @@ EXTRA_REQUIRES = {
 PYTHON_REQUIRES = '>=3.6'
 ENTRYPOINTS = {
     'console_scripts': [
-        'pcpm_volume_to_point_cloud=pcpm.cli.volume_to_point_cloud:main',
         'pcpm_icp=pcpm.cli.icp:main'
     ],
 }
