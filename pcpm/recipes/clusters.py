@@ -48,11 +48,11 @@ def split_pcs_in_clusters(pcs, embedding, labels) -> dict:
         labels ([type]): [description]
 
     Returns:
-        dict: a name:dict dictionary of point cloud dictionaries
+        dict: a label:dict dictionary of point cloud dictionaries. Labels are converted into strings.
     """
 
     assert len(labels) == len(
         embedding), "Labels and embedding musth have the same length"
 
     names_lists = labels_to_names(embedding, labels)
-    return {label: {name: pcs[name] for name in names} for label, names in names_lists.items()}
+    return {str(label): {name: pcs[name] for name in names} for label, names in names_lists.items()}

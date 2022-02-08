@@ -35,7 +35,8 @@ LICENSE = "CeCILL-B"
 AUTHOR = 'Marco Pascucci - NeuroSpin (CEA)'
 AUTHOR_EMAIL = 'marpas.paris@gmail.com'
 PLATFORMS = "OS Independent"
-PROVIDES = ['pcpm', 'pcpm.distance', 'pcpm.isomap', 'pcpm.cli', 'pcpm.average']
+PROVIDES = ['pcpm', 'pcpm.distance', 'pcpm.isomap',
+            'pcpm.cli', 'pcpm.average', 'pcpm.recipes']
 REQUIRES = ['scipy>=0.22', "pandas", "numpy", "tqdm", "sklearn", "matplotlib"]
 EXTRA_REQUIRES = {
     "doc": ["sphinx>=" + SPHINX_MIN_VERSION],

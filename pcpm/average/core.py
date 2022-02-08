@@ -104,7 +104,7 @@ def average_pcs_w(point_clouds: dict, weights: Sequence[float], normalize: bool)
     return Average_result(vol, numpy.round((xmin, ymin, zmin)).astype(int), n=len(point_clouds))
 
 
-def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, reference: str, FWHM: float, normalize: bool = True) -> Average_result:
+def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, align_to: str, FWHM: float, normalize: bool = True) -> Average_result:
     """Return a weighted average of the given point-clouds.
 
     Weights in [0,1] are calculated with 1-dimensional Gaussian function of the distance (in the embedding) of each pc to the given reference.
@@ -113,7 +113,7 @@ def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, reference: str,
     Args:
         point_clouds (dict): [description]
         embedding (pandas.DataFrame): [description]
-        reference (str): [description]
+        align_to (str): [description]
         FWHM (float): [description]
         normalize (bool, optional): map the output voxel values to [0,1]. Defaults to True. Defaults to True.
 
@@ -123,45 +123,53 @@ def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, reference: str,
 
     names = list(point_clouds.keys())
 
-    assert reference in names, "The reference is not in the point cloud keys"
+    assert align_to in names, f"The name '{align_to}' is not in the point cloud keys"
 
     embedding = embedding.loc[names]
 
-    weights = _get_weights(embedding, reference, FWHM)
+    weights = _get_weights(embedding, align_to, FWHM)
 
     return average_pcs_w(point_clouds, weights, normalize=normalize)
 
 
-# # Generate average volumes per each cluster
-# def generate_average_volume(clusters, embedding, references: Sequence = None, normalize=True):
-#     """[summary]
+# Generate average volumes per each cluster
+def average_each_cluster(clusters, embedding, FWHM, centers='auto', align=True, normalize=True):
+    """Generate the averages for each of the given clusters
 
-#     Args:
-#         clusters (Sequence): a label:dict(pcs) dictionary of clusters of point clouds
-#         embedding (DataFrame): [description]
-#         references (Sequence, optional): [description]. Defaults to None.
-#         normalize (bool, optional): map the output voxel values to [0,1]. Defaults to True. Defaults to True.
+    Args:
+        clusters (Sequence): a label:dict(pcs) dictionary of clusters of point clouds
+        embedding (DataFrame): [description]
+        centers (dict, optional): a label:name dict specifying the reference pc for each cluster, to be considered as the center of the gaussian weights.
+            Defaults to 'auto': the central subject is used (min dist from others).      
+        align (bool, optional): if True, the cluster is aligned to the point-cloud which is closest to the center.      
+        normalize (bool, optional): map the output voxel values to [0,1]. Defaults to True.
+    Returns:
+        [type]: [description]
+    """
 
-#     Returns:
-#         [type]: [description]
-#     """
+    labels = list(clusters.keys())
 
-#     labels = list(clusters.keys())
+    if centers == 'auto':
+        # use the central point_cloud
+        references = {label: find_central_pcs_name(
+            embedding.loc[clusters[label].keys()], labels=None, cluster_label=None) for label in set(labels)}
+    else:
+        assert clusters.keys() == labels.keys(), "Labels and clusters must have the same keys"
 
-#     if references is None:
-#         # use the central point_cloud
-#         references = [find_central_pcs_name(
-#             embedding, labels=labels, cluster_label=label) for label in set(labels)]
-#     else:
-#         try:
-#             references.iter()
-#         except:
-#             raise ValueError(
-#                 "referencies must be an sequence of names or a function of the cluster labels")
+    if (references is not None) and align:
+        # align each cluster
+        pcs = {label: align_pcs(clusters[label], references[label])[0]
+               for label in labels}
+    else:
+        pcs = clusters
 
-#     aligned, _, _ = pcpm.align_pcs(clusters[n], reference_name)
-#     return pcpm.average_pcs(aligned, embedding=embedding, reference=reference_name, FWHM=2000)
-#     if align_to is not None:
-#         aligned_clusters, _, _ = align_pcs(point_clouds, align_to)
+    av_volumes = {}
+    av_offsets = {}
 
-#     return average_pcs(aligned_clusters, embedding=embedding, FWHM=200, normalize=normalize)
+    for label in labels:
+        av_result = average_pcs(pcs[label], embedding=embedding,
+                                align_to=references[label], FWHM=FWHM, normalize=normalize)
+        av_volumes[label] = av_result.vol
+        av_offsets[label] = av_result.offset
+
+    return av_volumes, av_offsets
