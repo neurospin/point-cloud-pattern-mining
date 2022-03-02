@@ -175,7 +175,10 @@ def align_pcs(pcs: Sequence[np.ndarray], reference_pc_name: str, cores=None, ver
             It must be in the keys of pcs
 
     Returns:
-        dict: a dictionary of aligned buckets indexed by subject name
+        a list of 3 dicionnaries indexed by subject name, containing per each entry:
+            the aligned point-clouds
+            the rotation matrix
+            the translation vector
     """
     assert reference_pc_name in pcs
 
@@ -199,16 +202,16 @@ def align_pcs(pcs: Sequence[np.ndarray], reference_pc_name: str, cores=None, ver
         with Pool(cores) as p:
             icp_output = p.map(f, other_pcs)
 
-    distance_matrices = []
+    point_clouds = []
     rotation_matrices = []
     translation_vectors = []
 
     for dist, rot, tra in icp_output:
-        distance_matrices.append(dist)
+        point_clouds.append(dist)
         rotation_matrices.append(rot)
         translation_vectors.append(tra)
 
-    return dict(zip(subjects, distance_matrices)), dict(zip(subjects, rotation_matrices)), dict(zip(subjects, translation_vectors))
+    return dict(zip(subjects, point_clouds)), dict(zip(subjects, rotation_matrices)), dict(zip(subjects, translation_vectors))
 
 
 def sort_buckets(buckets: dict, isomap_df, axis: int):

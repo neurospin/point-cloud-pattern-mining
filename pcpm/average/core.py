@@ -11,10 +11,15 @@ from ..embedding import find_central_pcs_name
 
 
 class Average_result:
-    def __init__(self, vol, offset, n):
+    """Store the result of averaging a set of point-clouds"""
+
+    def __init__(self, vol, offset, n, rotation=None, translation=None, coord_in_embedding=None):
         self.n = n
         self.vol = vol
         self.offset = offset
+        self.translation = translation
+        self.rotation = rotation
+        self.coord_in_embedding = coord_in_embedding
 
     def __repr__(self):
         return f"Average of {self.n} point-clouds"
@@ -129,10 +134,11 @@ def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, align_to: str, 
 
     weights = _get_weights(embedding, align_to, FWHM)
 
-    return average_pcs_w(point_clouds, weights, normalize=normalize)
+    av = average_pcs_w(point_clouds, weights, normalize=normalize)
+    av.coord_in_embedding = embedding.loc[align_to].values
+    return av
 
 
-# Generate average volumes per each cluster
 def average_each_cluster(clusters, embedding, FWHM, centers='auto', align=True, normalize=True):
     """Generate the averages for each of the given clusters
 
@@ -144,7 +150,7 @@ def average_each_cluster(clusters, embedding, FWHM, centers='auto', align=True, 
         align (bool, optional): if True, the cluster is aligned to the point-cloud which is closest to the center.      
         normalize (bool, optional): map the output voxel values to [0,1]. Defaults to True.
     Returns:
-        [type]: [description]
+        Average_result: a class containing the result of the average calculation
     """
 
     labels = list(clusters.keys())
@@ -158,18 +164,23 @@ def average_each_cluster(clusters, embedding, FWHM, centers='auto', align=True, 
 
     if (references is not None) and align:
         # align each cluster
-        pcs = {label: align_pcs(clusters[label], references[label])[0]
-               for label in labels}
+        align_result = {label: align_pcs(
+            clusters[label], references[label]) for label in labels}
+        pcs = {label: align_result[label][0] for label in labels}
+        rotations = {label: align_result[label][1] for label in labels}
+        translations = {label: align_result[label][2] for label in labels}
     else:
         pcs = clusters
+        rotations = None
+        translations = None
 
-    av_volumes = {}
-    av_offsets = {}
+    av_results = {}
 
     for label in labels:
-        av_result = average_pcs(pcs[label], embedding=embedding,
-                                align_to=references[label], FWHM=FWHM, normalize=normalize)
-        av_volumes[label] = av_result.vol
-        av_offsets[label] = av_result.offset
+        av_results[label] = average_pcs(pcs[label], embedding=embedding,
+                                        align_to=references[label], FWHM=FWHM, normalize=normalize)
 
-    return av_volumes, av_offsets
+        av_results[label].rotation = rotations[label] if rotations is not None else None
+        av_results[label].translation = translations[label] if translations is not None else None
+
+    return av_results
