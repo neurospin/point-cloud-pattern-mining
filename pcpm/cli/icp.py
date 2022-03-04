@@ -27,9 +27,9 @@ def distances_by_icp(npz_path, n=None, jobs=None):
 
     # ALIGN THE POINTS CLOUDS AND CALCULATE ICP DISTANCE
     pcs = {name: data[name] for name in names}
-    dists, rots, tras = ma.calc_all_icp(pcs, n_cpu_max=jobs)
-    dist_df = pd.DataFrame(dists, index=names, columns=names)
-    return dist_df, rots, tras
+    icp = ma.calc_all_icp(pcs, n_cpu_max=jobs)
+    dist_df = pd.DataFrame(icp.dist, index=names, columns=names)
+    return dist_df, icp.rotations, icp.translations
 
 
 def main(*args, **kwargs):
@@ -59,6 +59,6 @@ def main(*args, **kwargs):
     fname = os.path.basename(args.input_path).split('.')[0]
 
     dist_df.to_csv(os.path.join(args.output_folder,
-                   f"{fname}_distances.csv"))
+                                f"{fname}_distances.csv"))
     np.savez_compressed(os.path.join(args.output_folder,
                         f"{fname}_transformations.npz"), rots=rots, tras=tras)
