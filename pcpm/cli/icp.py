@@ -26,8 +26,8 @@ def distances_by_icp(npz_path, n=None, jobs=None):
         jobs = cpu_count() - 3
 
     # ALIGN THE POINTS CLOUDS AND CALCULATE ICP DISTANCE
-    sel_buckets = [data[name] for name in names]
-    dists, rots, tras = ma.calc_all_icp(sel_buckets, n_cpu_max=jobs)
+    pcs = {name: data[name] for name in names}
+    dists, rots, tras = ma.calc_all_icp(pcs, n_cpu_max=jobs)
     dist_df = pd.DataFrame(dists, index=names, columns=names)
     return dist_df, rots, tras
 
