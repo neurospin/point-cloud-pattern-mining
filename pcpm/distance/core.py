@@ -67,11 +67,11 @@ py
     return distance_f(a1.T, a2.T, **kwargs)
 
 
-def calc_all_distances(sulci: Sequence[_np.ndarray],
+def calc_all_distances(point_clouds: Sequence[_np.ndarray],
                        distance_f: str,
                        indexes: Sequence[int] = 'all',
                        n_cpu_max=None, **kwargs):
-    """Calculate the distance between sulci.
+    """Calculate the distance between point-clouds.
 
     This fucntion is parallelized and will use multiple CPUs.
 
@@ -82,11 +82,11 @@ def calc_all_distances(sulci: Sequence[_np.ndarray],
     # get the distance function
     distance_f = _get_distance_f(distance_f)
 
-    assert all([s.shape[1] == 3 for s in sulci]),\
-        "input sulci must be arrays of point (expected shape Nx3)"
+    assert all([s.shape[1] == 3 for s in point_clouds]),\
+        "input point-clouds must be arrays of point (expected shape Nx3)"
 
-    # Transpose each sulcus (get shape 3xN)
-    sulci = [s.T for s in sulci]
+    # Transpose each pc (get shape 3xN)
+    sulci = [s.T for s in point_clouds]
 
     # the number of CPUs to use
     if n_cpu_max is None:
@@ -95,7 +95,7 @@ def calc_all_distances(sulci: Sequence[_np.ndarray],
         n_cpu_max = min(cpu_count(), n_cpu_max)
 
     if indexes == 'all':
-        # calc distances for all sulci
+        # calc distances for all pcs
         indexes = range(len(sulci))
 
     dist_results = list()
@@ -107,28 +107,41 @@ def calc_all_distances(sulci: Sequence[_np.ndarray],
             this_res = p.map(f, sulci)
             dist_results.append(this_res)
 
-    return dist_results
-
-
-def calc_all_icp(sulci: Sequence[_np.ndarray], n_cpu_max: int = None):
-    """"Run icp between all pairs of sulci
-
-    :param sulci: list of sulci (M, Nx3)
-    :type sulci: Sequence[_np.ndarray]
-    :param n_cpu_max: max number of CPUs used, defaults to None (all available)
-    :type n_cpu_max: int, optional
-    :return: distance matrix, rotations, translations
-    :rtype: list of _np.ndarray (NxNx1, NxNx3x3, NxNx3)
-    """
-    d = calc_all_distances(sulci, distance_f='icp', n_cpu_max=n_cpu_max)
+    # create a custom datatype numpy array to store the
+    # list conveniently
     dt = _np.dtype([
         ('distance', _np.float),
         ('rotation', _np.float, (3, 3)),
         ('translation', _np.float, (3))
     ])
-    a = _np.array(d, dtype=dt)
+    dist_results = _np.array(dist_results, dtype=dt)
 
-    return ICP_result(a['distance'], a['rotation'], a['translation'])
+    return dist_results
+
+
+def calc_all_icp(point_clouds: dict, n_cpu_max: int = None):
+    """"Run icp between all pairs of sulci
+
+    :param sulci:point_cloud dictionnary (M, Nx3)
+    :type sulci: dict of str:np.array
+    :param n_cpu_max: max number of CPUs used, defaults to None (all available)
+    :type n_cpu_max: int, optional
+    :return: distance matrix, rotations, translations
+    :rtype: list of _np.ndarray (NxNx1, NxNx3x3, NxNx3)
+    """
+
+    names = list(point_clouds.keys())
+
+    d = calc_all_distances(
+        point_clouds.values(), distance_f='icp', n_cpu_max=n_cpu_max)
+
+    # ICP_result(a['distance'], a['rotation'], a['translation'])
+
+    dist = pandas.DataFrame(d['distance'], index=names, columns=names)
+    rot = dict(zip(names, d['rotation']))
+    tra = dict(zip(names, d['translation']))
+
+    return ICP_result(dist, rot, tra)
 
 
 def find_MAD_outliers(distance_df: pandas.DataFrame, sd_factor: int = 3):
