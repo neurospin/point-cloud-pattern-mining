@@ -2,6 +2,7 @@
 
 from typing import Sequence
 import pandas
+from ..transform import transform_datapoints
 
 
 def split_embedding_clusters(embedding: pandas.DataFrame, labels: Sequence[str]):
@@ -56,3 +57,14 @@ def split_pcs_in_clusters(pcs, embedding, labels) -> dict:
 
     names_lists = labels_to_names(embedding, labels)
     return {str(label): {name: pcs[name] for name in names} for label, names in names_lists.items()}
+
+
+# TODO: write an alin_cluster function
+
+def apply_affine3D_to_cluster(cluster, rotations, translations):
+    transformed_clusters = dict()
+    for name, pc in cluster.items():
+        transformed_clusters[name] = transform_datapoints(
+            pc, dxyz=(1, 1, 1), rotation_matrix=rotations[name], translation_vector=translations[name])
+
+    return transformed_clusters

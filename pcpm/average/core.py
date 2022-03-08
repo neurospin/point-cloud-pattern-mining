@@ -109,16 +109,16 @@ def average_pcs_w(point_clouds: dict, weights: Sequence[float], normalize: bool)
     return Average_result(vol, numpy.round((xmin, ymin, zmin)).astype(int), n=len(point_clouds))
 
 
-def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, align_to: str, FWHM: float, normalize: bool = True) -> Average_result:
+def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, center_name: str, FWHM: float, normalize: bool = True) -> Average_result:
     """Return a weighted average of the given point-clouds.
 
-    Weights in [0,1] are calculated with 1-dimensional Gaussian function of the distance (in the embedding) of each pc to the given reference.
+    Weights in [0,1] are calculated with 1-dimensional Gaussian function of the distance (in the embedding) of each pc from the specified center.
 
 
     Args:
         point_clouds (dict): [description]
         embedding (pandas.DataFrame): [description]
-        align_to (str): [description]
+        center_name (str): [description]
         FWHM (float): [description]
         normalize (bool, optional): map the output voxel values to [0,1]. Defaults to True. Defaults to True.
 
@@ -128,14 +128,14 @@ def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, align_to: str, 
 
     names = list(point_clouds.keys())
 
-    assert align_to in names, f"The name '{align_to}' is not in the point cloud keys"
+    assert center_name in names, f"The name '{center_name}' is not in the point cloud keys"
 
     embedding = embedding.loc[names]
 
-    weights = _get_weights(embedding, align_to, FWHM)
+    weights = _get_weights(embedding, center_name, FWHM)
 
     av = average_pcs_w(point_clouds, weights, normalize=normalize)
-    av.coord_in_embedding = embedding.loc[align_to].values
+    av.coord_in_embedding = embedding.loc[center_name].values
     return av
 
 
@@ -160,7 +160,8 @@ def average_each_cluster(clusters, embedding, FWHM, centers='auto', align=True, 
         references = {label: find_central_pcs_name(
             embedding.loc[clusters[label].keys()], labels=None, cluster_label=None) for label in set(labels)}
     else:
-        assert clusters.keys() == labels.keys(), "Labels and clusters must have the same keys"
+        assert centers.keys() == labels.keys(), "Labels and clusters must have the same keys"
+        references = centers
 
     if (references is not None) and align:
         # align each cluster
@@ -178,7 +179,7 @@ def average_each_cluster(clusters, embedding, FWHM, centers='auto', align=True, 
 
     for label in labels:
         av_results[label] = average_pcs(pcs[label], embedding=embedding,
-                                        align_to=references[label], FWHM=FWHM, normalize=normalize)
+                                        center_name=references[label], FWHM=FWHM, normalize=normalize)
 
         av_results[label].rotation = rotations[label] if rotations is not None else None
         av_results[label].translation = translations[label] if translations is not None else None
