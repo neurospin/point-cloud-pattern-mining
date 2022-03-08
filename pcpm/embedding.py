@@ -36,8 +36,8 @@ def find_central_pcs_name(embedding: pandas.DataFrame, labels=None, cluster_labe
 
         embedding = subset_embedding_by_label(embedding, labels, cluster_label)
 
-    # distances from all other elements (sum over columns)
-    sum_of_dist = embedding.sum(axis=1)
+    # distances from the mean coordinate (sum over columns)
+    sum_of_dist = (numpy.abs(embedding - embedding.mean()) ** 2).sum(axis=1)
     # The center subject is the one that is the less far from
     # all the others
     return sum_of_dist.sort_values().index[0]

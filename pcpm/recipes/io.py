@@ -49,7 +49,7 @@ def load_icp_result(csv_path: str, npz_path: str = None) -> dict:
     # load distance matrix
     dist = pandas.read_csv(csv_path, index_col=0)
     # load transformations
-    rots, trans = dict(numpy.load(npz_path)).values()
+    rots, trans = dict(numpy.load(npz_path, allow_pickle=True)).values()
 
     return ICP_result(dist, rots, trans)
 
