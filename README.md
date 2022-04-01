@@ -501,10 +501,9 @@ sub_embedding = embedding.loc[:,[1,3]]
 # do the clustering you prefer
 k=3
 kmeans = KMeans(n_clusters=k, random_state=0).fit(sub_embedding.values.reshape(-1, len(sub_embedding.iloc[0])))
-cluster_labels = kmeans.labels_
 cluster_centers = kmeans.cluster_centers_
 # split the aligned point-clouds in clusters
-pcpm.plot.clustering(sub_embedding, labels=cluster_labels)
+pcpm.plot.clustering(sub_embedding, labels=kmeans.labels_)
 ```
 
 
@@ -517,8 +516,7 @@ pcpm.plot.clustering(sub_embedding, labels=cluster_labels)
 from sklearn.cluster import DBSCAN
 sub_embedding = embedding.loc[:,[1,3]]
 dbscan = DBSCAN(eps=0.48, min_samples=3).fit(sub_embedding.values.reshape(-1, len(sub_embedding.iloc[0])))
-cluster_labels = dbscan.labels_
-pcpm.plot.clustering(sub_embedding, labels=cluster_labels)
+pcpm.plot.clustering(sub_embedding, labels=dbscan.labels_)
 ```
 
 
@@ -527,28 +525,14 @@ pcpm.plot.clustering(sub_embedding, labels=cluster_labels)
 
 
 ```python
-from collections import Counter
-temp_df = sub_embedding.copy()
-labels = cluster_labels
-```
-
-
-```python
-# Take the n largest clusters
-clusters = pcpm.split_pcs_in_clusters(aligned_pcs, embedding=sub_embedding, labels=cluster_labels)
+# Split the point-clouds in clusters
+clusters = pcpm.split_pcs_in_clusters(aligned_pcs, embedding=sub_embedding, labels=dbscan.labels_)
 
 n = 2
 larges_clusters, other_pcs = pcpm.clusters.get_n_largest_clusters(clusters, n)
 cluster_names = list(larges_clusters.keys())
 cluster_names
 ```
-
-
-
-
-    ['0', '1']
-
-
 
 ## Averages
 ---
@@ -566,14 +550,14 @@ averages = pcpm.average_each_cluster(larges_clusters,
 
 
 ```python
-av = averages['1']
-av.coord_in_embedding
+av = averages['0']
+av.central_name
 ```
 
 
 
 
-    array([ 2.43868471, -2.64527022])
+    'R142626'
 
 
 
@@ -591,6 +575,8 @@ av.coord_in_embedding
 ---
 Building meshes of the moving averages.
 This part requires [Brainvisa](https://brainvisa.info/web/)
+
+## Meshes of the averages
 
 
 ```python
@@ -638,3 +624,84 @@ plt.imshow(an.snapshot());
 
 ![png](./docs/README_images/Readme_33_0.png)
 
+
+## Meshes of the point clouds
+
+
+```python
+# make the meshing of the point-clouds in a cluster
+cluster_meshes = dtb.mesh_of_point_clouds(clusters['0'], embedding=sub_embedding, embedding_scale=8)
+```
+
+    meshing...: 100%|██████████| 225/225 [00:04<00:00, 50.56it/s]
+    rebuilding results: 100%|██████████| 225/225 [00:24<00:00,  9.28it/s]
+
+
+
+```python
+# shift the meshes according to the distance from the center of the cluster
+distances = pcpm.clusters.calc_distances_from_central(clusters['0'], sub_embedding)
+
+shifted_meshes = {}
+for name,mesh in cluster_meshes.items():
+    shifted_meshes[name] = dtb.mesh.shift_aims_mesh_along_axis(mesh, offset=distances[name], axis=1, scale=200)
+```
+
+
+<!-- REMOVED CODE CELL [kw: %autoreload|#HIDE_IN_MARKDOWN]
+```python
+#HIDE_IN_MARKDOWN
+an.clear()
+an(dict(average=meshes['0']), c='red')
+an(shifted_meshes,c='lightgreen')
+plt.imshow(an.snapshot())
+```
+-->
+
+
+
+
+    <matplotlib.image.AxesImage at 0x7f42bb6b9eb8>
+
+
+
+
+![png](./docs/README_images/Readme_37_1.png)
+
+
+
+<!-- REMOVED CODE CELL [kw: %autoreload|#HIDE_IN_MARKDOWN]
+```python
+#HIDE_IN_MARKDOWN
+
+# shift the mesh according to the embedding coodrinates
+# assert sub_embedding.shape[1] <=3
+
+# shifted_meshes = {}
+# for name,mesh in cluster_meshes.items():
+#     offset = np.zeros(3)
+#     offset[1:] = sub_embedding.loc[name]
+#     offset*=100
+#     shifted_meshes[name] = dtb.mesh.transform_mesh(mesh, transl_vec=offset)
+```
+-->
+
+
+<!-- REMOVED CODE CELL [kw: %autoreload|#HIDE_IN_MARKDOWN]
+```python
+#HIDE_IN_MARKDOWN
+
+# an.clear()
+# temp_trals = np.zeros(3)
+# temp_trals[1:] = averages['0'].coord_in_embedding*100
+# temp_mesh = dtb.mesh.transform_mesh(meshes['0'],transl_vec=temp_trals)
+# an(dict(average=temp_mesh), c='red')
+# an(shifted_meshes,c='lightgreen')
+# plt.imshow(an.snapshot())
+```
+-->
+
+
+```python
+
+```
