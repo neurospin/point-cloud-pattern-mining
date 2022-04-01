@@ -68,3 +68,26 @@ def apply_affine3D_to_cluster(cluster, rotations, translations):
             pc, dxyz=(1, 1, 1), rotation_matrix=rotations[name], translation_vector=translations[name])
 
     return transformed_clusters
+
+
+def get_names_of_n_largest_clusters(clusters, n):
+    # get the clusters size
+    d = {k: len(cluster) for k, cluster in clusters.items()}
+    # sort the clusters
+    sorted_names = [e[0] for e in sorted(
+        d.items(), key=lambda item:item[1], reverse=True)]
+    return sorted_names[:n]
+
+
+def get_n_largest_clusters(clusters, n):
+    """Filter clusters to keep only the n largest
+
+    Args:
+        clusters (dict): clusters of point-clouds
+    """
+
+    cluster_names = get_names_of_n_largest_clusters(clusters, n)
+    out = {k: clusters[k] for k in cluster_names}
+    others = {x: clusters[k][x]
+              for k in clusters if k not in cluster_names for x in clusters[k]}
+    return out, others
