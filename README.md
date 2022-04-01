@@ -35,27 +35,6 @@ import pcpm
 
 <!-- REMOVED CODE CELL [kw: %autoreload|#HIDE_IN_MARKDOWN]
 ```python
-%%capture
-%gui qt
-
-#HIDE_IN_MARKDOWN
-# run this cell only once, at the beginning.
-an = dtb.anatomist.Anatomist()
-```
--->
-
-
-<!-- REMOVED CODE CELL [kw: %autoreload|#HIDE_IN_MARKDOWN]
-```python
-#HIDE_IN_MARKDOWN
-# run this line only after the Anatomist window appears
-%matplotlib inline
-```
--->
-
-
-<!-- REMOVED CODE CELL [kw: %autoreload|#HIDE_IN_MARKDOWN]
-```python
 #HIDE_IN_MARKDOWN
 
 # the following module requires Brainvisa (https://brainvisa.info/web/) and is only used here for displaying the results
@@ -91,6 +70,27 @@ values = list(pcs.values())
 -->
 
 
+<!-- REMOVED CODE CELL [kw: %autoreload|#HIDE_IN_MARKDOWN]
+```python
+%%capture
+%gui qt
+
+#HIDE_IN_MARKDOWN
+# run this cell only once, at the beginning.
+an = dtb.anatomist.Anatomist()
+```
+-->
+
+
+<!-- REMOVED CODE CELL [kw: %autoreload|#HIDE_IN_MARKDOWN]
+```python
+#HIDE_IN_MARKDOWN
+# run this line only after the Anatomist window appears
+%matplotlib inline
+```
+-->
+
+
 ```python
 # The point clouds need to be stored in a dictionnary
 # This example works uses 1765 point-clouds representing the Central Sulcus
@@ -122,6 +122,7 @@ pcs['L295146'].shape
 <!-- REMOVED CODE CELL [kw: %autoreload|#HIDE_IN_MARKDOWN]
 ```python
 #HIDE_IN_MARKDOWN
+an.clear()
 an(pcs['L295146'])
 plt.imshow(an.snapshot());
 ```
@@ -368,7 +369,7 @@ aligned_pcs, aligned_rot, aligned_transl = pcpm.align_pcs(pcs, central_subject)
 ```
 
     >>> INFO pcpm.transform - using 45 cores out of 48
-    Aligning point-clouds to R192540: 100%|██████████| 800/800 [02:48<00:00,  4.75it/s]
+    Aligning point-clouds to R192540: 100%|██████████| 800/800 [02:48<00:00,  4.76it/s]
 
 
 
@@ -496,14 +497,13 @@ The choice of the clustering method is left to the used. Here we give an example
 # K-MEANS ==========================
 from sklearn.cluster import KMeans
 # select a 2D subspace of the embedding
-sub_embedding = embedding.iloc[:,[0,1]]
+sub_embedding = embedding.loc[:,[1,3]]
 # do the clustering you prefer
 k=3
 kmeans = KMeans(n_clusters=k, random_state=0).fit(sub_embedding.values.reshape(-1, len(sub_embedding.iloc[0])))
 cluster_labels = kmeans.labels_
 cluster_centers = kmeans.cluster_centers_
 # split the aligned point-clouds in clusters
-clusters = pcpm.split_pcs_in_clusters(aligned_pcs, embedding=sub_embedding, labels=cluster_labels)
 pcpm.plot.clustering(sub_embedding, labels=cluster_labels)
 ```
 
@@ -515,10 +515,9 @@ pcpm.plot.clustering(sub_embedding, labels=cluster_labels)
 ```python
 # DBSCAN ==========================
 from sklearn.cluster import DBSCAN
-sub_embedding = embedding.iloc[:,[0,2]]
+sub_embedding = embedding.loc[:,[1,3]]
 dbscan = DBSCAN(eps=0.48, min_samples=3).fit(sub_embedding.values.reshape(-1, len(sub_embedding.iloc[0])))
 cluster_labels = dbscan.labels_
-clusters = pcpm.split_pcs_in_clusters(aligned_pcs, embedding=sub_embedding, labels=cluster_labels)
 pcpm.plot.clustering(sub_embedding, labels=cluster_labels)
 ```
 
@@ -528,7 +527,16 @@ pcpm.plot.clustering(sub_embedding, labels=cluster_labels)
 
 
 ```python
+from collections import Counter
+temp_df = sub_embedding.copy()
+labels = cluster_labels
+```
+
+
+```python
 # Take the n largest clusters
+clusters = pcpm.split_pcs_in_clusters(aligned_pcs, embedding=sub_embedding, labels=cluster_labels)
+
 n = 2
 larges_clusters, other_pcs = pcpm.clusters.get_n_largest_clusters(clusters, n)
 cluster_names = list(larges_clusters.keys())
@@ -538,7 +546,7 @@ cluster_names
 
 
 
-    ['1', '6']
+    ['0', '1']
 
 
 
@@ -565,7 +573,7 @@ av.coord_in_embedding
 
 
 
-    array([-2.96314941,  0.94388296])
+    array([ 2.43868471, -2.64527022])
 
 
 
@@ -573,6 +581,7 @@ av.coord_in_embedding
 <!-- REMOVED CODE CELL [kw: %autoreload|#HIDE_IN_MARKDOWN]
 ```python
 #HIDE_IN_MARKDOWN
+
 # plot the volumes with colorado
 # cld.draw({k:av.vol for k,av in averages.items()}, shift=(0,30,0), th_min=0.5)
 ```
@@ -611,7 +620,7 @@ meshes_in_emmbedding = dtb.mesh_of_averages(averages, in_embedding=True, embeddi
 # SHIFTED 
 # cld.draw(meshes, title="shifted MA", shift=(0,30,0))
 # OVERLAP
-# fig = cld.draw(meshes['6'], color='red')
+# fig = cld.draw(meshes['0'], color='red')
 # cld.draw(meshes['1'], color='lightgreen', fig=fig)
 ```
 -->
@@ -627,5 +636,5 @@ plt.imshow(an.snapshot());
 -->
 
 
-![png](./docs/README_images/Readme_32_0.png)
+![png](./docs/README_images/Readme_33_0.png)
 

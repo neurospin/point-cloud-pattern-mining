@@ -1,5 +1,6 @@
 
 
+from collections import Counter
 from typing import Sequence
 import pandas
 from ..transform import transform_datapoints
@@ -40,8 +41,28 @@ def labels_to_names(embedding: pandas.DataFrame, labels: Sequence[str]) -> Seque
     return names_lists
 
 
-def split_pcs_in_clusters(pcs, embedding, labels) -> dict:
-    """Split the point cloud ditcionnary according to the given labels
+def rename_labels_by_count(labels):
+    """Rename the given label arrays, sorting labels by item counts
+
+    Args:
+        labels: array of labels (e.g. the output of clustering)
+
+    Returns:
+        array of labels
+    """
+    counter = Counter(labels)
+    d = {item[0]: i for i, item in enumerate(
+        sorted(counter.items(), key=lambda x: x[1], reverse=True))}
+    new_labels = list(map(lambda x: d[x], labels))
+
+    return new_labels
+
+
+def split_pcs_in_clusters(pcs, embedding, labels, reorder_labels=True) -> dict:
+    """Split the point cloud ditcionnary according to the given labels.
+
+    If reorder_labels is true, the labels are renamed (0 to len(clusters))
+    so that cluster 0 is the biggest, 1 the second biggest and so on.
 
     Args:
         pcs ([type]): [description]
@@ -54,6 +75,9 @@ def split_pcs_in_clusters(pcs, embedding, labels) -> dict:
 
     assert len(labels) == len(
         embedding), "Labels and embedding musth have the same length"
+
+    if (reorder_labels):
+        labels = rename_labels_by_count(labels)
 
     names_lists = labels_to_names(embedding, labels)
     return {str(label): {name: pcs[name] for name in names} for label, names in names_lists.items()}
@@ -77,6 +101,15 @@ def get_names_of_n_largest_clusters(clusters, n):
     sorted_names = [e[0] for e in sorted(
         d.items(), key=lambda item:item[1], reverse=True)]
     return sorted_names[:n]
+
+
+def sort_clusters_by_counts(clusters):
+    """Sort and re-label the cluster by the count of their elements (from largest to smallest)"""
+    out = dict()
+    ordered_names = get_names_of_n_largest_clusters(clusters, len(clusters))
+    for i, name in enumerate(ordered_names):
+        out[str(i)] = clusters[name]
+    return out
 
 
 def get_n_largest_clusters(clusters, n):

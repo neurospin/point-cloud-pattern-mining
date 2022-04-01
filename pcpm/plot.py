@@ -71,22 +71,28 @@ def clustering(data: pandas.DataFrame, labels, cmap='tab10', **kwargs):
     df = pandas.DataFrame(data).copy()
     embedding_dim = len(df.iloc[0])
     cmap = matplotlib.cm.get_cmap(cmap)
-    df['label'] = labels
-    df['color'] = list(map(cmap, labels))
+
+    counter = Counter(labels)
+    d = {item[0]: i for i, item in enumerate(
+        sorted(counter.items(), key=lambda x: x[1], reverse=True))}
+    new_labels = list(map(lambda x: d[x], labels))
+    label_counts = sorted(
+        Counter(new_labels).items(), key=lambda x: x[1], reverse=True)
+
+    df['label'] = new_labels
+    df['color'] = list(map(cmap, new_labels))
 
     if embedding_dim == 1:
-        for label in set(labels):
+        for label in set(new_labels):
             plt.hist(df.loc[df.label == label].iloc[:, 0], **kwargs)
     elif embedding_dim == 2:
         df.plot.scatter(*df.columns[0:2], c=df.loc[:, "color"])
-        counter = Counter(labels)
+        counter = Counter(new_labels)
         # order the labels by their frequency
-        unique_labels = sorted(
-            counter.items(), key=lambda x: x[1], reverse=True)
-        if len(unique_labels) > 10:
+        if len(label_counts) > 10:
             # cut the labels for the legend
-            unique_labels = list(unique_labels)[:9]
-        for l in unique_labels:
+            label_counts = label_counts[:9]
+        for l in label_counts:
             plt.scatter([], [], color=cmap(l[0]),
                         label=f"{l[0]} ({l[1]} counts)")
         plt.legend(bbox_to_anchor=(1, 1), loc="upper left")
