@@ -12,14 +12,20 @@ def subset_embedding_by_label(embedding, labels, label=None):
     return embedding
 
 
-def find_central_pcs_name(embedding: pandas.DataFrame, labels=None, cluster_label=None):
-    """Get the name of the central subject.
+def find_central_pcs_name(embedding: pandas.DataFrame, names=None, labels=None, cluster_label=None):
+    """Get the name of the central subject in an embedding.
 
     The center subject is the one that is the closest to all others.
 
     Args:
         embedding (pandas.DataFrame): the embedding of the point-clouds
-        labels ([Sequence], optional): [description]. an array of labels for the points of the embedding
+
+        names ([Sequence], optional): an array of the names of the subject defining the set.
+        if names are specified, the arguments labels and cluster_labels are ignored.
+
+        labels ([Sequence], optional): [description]. an array of labels for the points of the embedding.
+        If labels are given, then cluster_label must be specified.
+
         cluster_label ([type], optional): a specific label to filter the embedding. Defaults to None.
 
     Raises:
@@ -29,7 +35,10 @@ def find_central_pcs_name(embedding: pandas.DataFrame, labels=None, cluster_labe
         [str]: The name of the central point_cloud
     """
 
-    if labels is not None:
+    if names is not None:
+        embedding = embedding.loc[names]
+
+    elif labels is not None:
         assert len(embedding) == len(labels)
         if cluster_label is None:
             raise ValueError("Please specify the cluster to use.")

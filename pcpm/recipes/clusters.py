@@ -2,8 +2,10 @@
 
 from collections import Counter
 from typing import Sequence
+import numpy
 import pandas
 from ..transform import transform_datapoints
+from ..embedding import find_central_pcs_name
 
 
 def split_embedding_clusters(embedding: pandas.DataFrame, labels: Sequence[str]):
@@ -124,3 +126,75 @@ def get_n_largest_clusters(clusters, n):
     others = {x: clusters[k][x]
               for k in clusters if k not in cluster_names for x in clusters[k]}
     return out, others
+
+
+def get_central_pc_name(embedding, cluster):
+    """Find the name of the central point-cloud in a cluster.
+    The central point-colud is the one which is the closest to all the others
+
+    Args:
+        embedding (DataFrame): the embedding
+        cluster (dict): a cluster of point-clouds
+
+    Returns:
+        str: name of the central point-cloud
+    """
+    return find_central_pcs_name(embedding, cluster.keys())
+
+
+def get_central_pc_coordinates(embedding, cluster):
+    """Find the coordinates of the central point-cloud in a cluster.
+    The central point-colud is the one which is the closest to all the others
+
+    Args:
+        embedding (DataFrame): the embedding
+        cluster (dict): a cluster of point-clouds
+
+    Returns:
+        np.array: coordinates of the central point-cloud
+    """
+    name = get_central_pc_name(embedding, cluster)
+    return embedding.loc[name].values
+
+
+def eucl_norm(p) -> float:
+    """Euclidean norm"""
+    return numpy.sqrt(numpy.sum(p**2))
+
+
+def calc_distances_in_embedding(cluster, embedding, reference_name=None):
+    """Calculate the distace in the embedding for all point-clouds in cluster from a reference point
+
+    Args:
+        cluster (dict): cluster of point-clouds
+        embedding (DataFrame): the embedding
+        reference_name (str, optional): Name of the reference point-cloud. Defaults to None, in which
+        case, the cluster-central point-cloud is used.
+
+    Returns:
+        series: the distances
+    """
+
+    if reference_name is None:
+        reference_name = get_central_pc_name(embedding, cluster)
+
+    assert reference_name in cluster
+
+    ref_coords = embedding.loc[reference_name]
+    w = embedding.copy()
+    w = w-ref_coords
+    return w.apply(eucl_norm, axis=1)
+
+
+def calc_distances_from_central(cluster, embedding):
+    """Calculate the distace in the embedding for all point-clouds in cluster from the central point-cloud
+
+    Args:
+        cluster (dict): cluster of point-clouds
+        embedding (DataFrame): the embedding
+
+    Returns:
+        series: the distances
+    """
+
+    return calc_distances_in_embedding(cluster, embedding)

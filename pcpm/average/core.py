@@ -13,13 +13,14 @@ from ..embedding import find_central_pcs_name
 class Average_result:
     """Store the result of averaging a set of point-clouds"""
 
-    def __init__(self, vol, offset, n, rotation=None, translation=None, coord_in_embedding=None):
+    def __init__(self, vol, offset, n, rotation=None, translation=None, coord_in_embedding=None, central_name=None):
         self.n = n
         self.vol = vol
         self.offset = offset
         self.translation = translation
         self.rotation = rotation
         self.coord_in_embedding = coord_in_embedding
+        self.central_name = None
 
     def __repr__(self):
         return f"Average of {self.n} point-clouds"
@@ -183,5 +184,6 @@ def average_each_cluster(clusters, embedding, FWHM, centers='auto', align=True, 
 
         av_results[label].rotation = rotations[label] if rotations is not None else None
         av_results[label].translation = translations[label] if translations is not None else None
+        av_results[label].central_name = references[label]
 
     return av_results
