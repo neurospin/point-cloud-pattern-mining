@@ -128,7 +128,7 @@ plt.imshow(an.snapshot());
 -->
 
 
-![png](docs/README_images/Readme_9_0.png)
+![png](./docs/README_images/Readme_9_0.png)
 
 
 # Distance calculation
@@ -482,7 +482,7 @@ pcpm.plot.isomap_embedding(embedding)
 ```
 
 
-![png](docs/README_images/Readme_20_0.png)
+![png](./docs/README_images/Readme_20_0.png)
 
 
 ## Clustering
@@ -508,7 +508,7 @@ pcpm.plot.clustering(sub_embedding, labels=cluster_labels)
 ```
 
 
-![png](docs/README_images/Readme_22_0.png)
+![png](./docs/README_images/Readme_22_0.png)
 
 
 
@@ -523,7 +523,7 @@ pcpm.plot.clustering(sub_embedding, labels=cluster_labels)
 ```
 
 
-![png](docs/README_images/Readme_23_0.png)
+![png](./docs/README_images/Readme_23_0.png)
 
 
 
@@ -627,5 +627,5 @@ plt.imshow(an.snapshot());
 -->
 
 
-![png](docs/README_images/Readme_32_0.png)
+![png](./docs/README_images/Readme_32_0.png)
 
