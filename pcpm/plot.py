@@ -1,3 +1,4 @@
+from collections import Counter
 import warnings
 from scipy.stats import norm
 import pandas
@@ -73,14 +74,21 @@ def clustering(data: pandas.DataFrame, labels, cmap='tab10', **kwargs):
     df['label'] = labels
     df['color'] = list(map(cmap, labels))
 
-    print(embedding_dim)
-
     if embedding_dim == 1:
         for label in set(labels):
             plt.hist(df.loc[df.label == label].iloc[:, 0], **kwargs)
     elif embedding_dim == 2:
         df.plot.scatter(*df.columns[0:2], c=df.loc[:, "color"])
-        for l in set(labels):
-            plt.scatter([], [], label=l)
+        counter = Counter(labels)
+        # order the labels by their frequency
+        unique_labels = sorted(
+            counter.items(), key=lambda x: x[1], reverse=True)
+        if len(unique_labels) > 10:
+            # cut the labels for the legend
+            unique_labels = list(unique_labels)[:9]
+        for l in unique_labels:
+            plt.scatter([], [], color=cmap(l[0]),
+                        label=f"{l[0]} ({l[1]} counts)")
+        plt.legend(bbox_to_anchor=(1, 1), loc="upper left")
     else:
         log.warning("Not available for embedding of dimension > 2")
