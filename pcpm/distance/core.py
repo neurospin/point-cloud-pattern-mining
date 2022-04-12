@@ -36,8 +36,12 @@ _distance_types_map = {
     "icp_python": functions.icp_python
 }
 
+DEFAULT_FUNCTION = "icp_python"
+
 if HAS_LIBPOINTMATCHER:
     _distance_types_map["icp_libpointmatcher"] = libpointmatcher.icp_libpointmatcher
+    DEFAULT_FUNCTION = "icp_libpointmatcher"
+
 
 distance_types = list(_distance_types_map.keys())
 
@@ -48,7 +52,7 @@ def _get_distance_f(x):
         try:
             # get the specified distance function, default to the PYTHON implementation
             distance_f = _distance_types_map.get(
-                x, _distance_types_map["icp_python"])
+                x, DEFAULT_FUNCTION)
         except:
             raise ValueError(
                 "The distance type must be one of {}".format(distance_types))

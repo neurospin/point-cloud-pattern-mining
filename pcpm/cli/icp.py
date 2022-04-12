@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 # custom packages
 
 
-def distances_by_icp(npz_path, n=None, jobs=None):
+def distances_by_icp(npz_path, n=None, jobs=None, epsilon=0.1, max_iter=10):
     """Calculate distance by ICP.
     Return the distance_matrix and the final rotations matrix and translations vectors used during distance calculation."""
 
@@ -27,7 +27,8 @@ def distances_by_icp(npz_path, n=None, jobs=None):
 
     # ALIGN THE POINTS CLOUDS AND CALCULATE ICP DISTANCE
     pcs = {name: data[name] for name in names}
-    icp = ma.calc_all_icp(pcs, n_cpu_max=jobs)
+    icp = ma.calc_all_icp(pcs, n_cpu_max=jobs,
+                          epsilon=epsilon, max_iter=max_iter)
     dist_df = pd.DataFrame(icp.dist, index=names, columns=names)
     return dist_df, icp.rotations, icp.translations
 
@@ -45,6 +46,12 @@ def main(*args, **kwargs):
         "-n", "--n_samples", help="Size of subsample. Is specified, the distance is calculated only for n randomly chosen subjects", type=int)
     parser.add_argument(
         "-j", "--jobs", help="Number of parallel jobs for the ICP calculation", type=int)
+    parser.add_argument(
+        "-e", "--epsilon", help="min distance improvement on one iteration to continue. Defaluts to 0.1", type=float, default=0.1)
+    parser.add_argument(
+        "-i", "--max_iter", help="Max number of iteration. Defaults to 10.", type=int, default=10)
+    parser.add_argument(
+        "-f", "--distance_function", help="The distance function One of {}. Defaults to {}".format(ma.distance.core.distance_types, ma.distance.core.DEFAULT_FUNCTION), type=str)
     args = parser.parse_args()
 
     # create output folder if it does not exist
@@ -54,7 +61,7 @@ def main(*args, **kwargs):
         os.makedirs(args.output_folder, exist_ok=True)
 
     dist_df, rots, tras = distances_by_icp(
-        args.input_path, n=args.n_samples, jobs=args.jobs)
+        args.input_path, n=args.n_samples, jobs=args.jobs, epsilon=args.epsilon, max_iter=args.max_iter)
 
     fname = os.path.basename(args.input_path).split('.')[0]
 
