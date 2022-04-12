@@ -30,9 +30,8 @@ def _calc_closest_point(a1: numpy.ndarray, a2: numpy.ndarray):
     :param a2: second array
     :type a2: DxM numpy.ndarray
     :return: closest points coodrinates (DxN),
-        respective distances (1xN),
         closest points indices in a2 (1xN),
-        average distance
+        average distance (scalar)
     :rtype: tuple
     """
 
