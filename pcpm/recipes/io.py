@@ -1,4 +1,3 @@
-from click import FileError
 import numpy
 import pandas
 from os import path as _path
