@@ -51,7 +51,10 @@ def main(*args, **kwargs):
     parser.add_argument(
         "-i", "--max_iter", help="Max number of iteration. Defaults to 10.", type=int, default=10)
     parser.add_argument(
-        "-f", "--distance_function", help="The distance function One of {}. Defaults to {}".format(ma.distance.core.distance_types, ma.distance.core.DEFAULT_FUNCTION), type=str)
+        "-f", "--distance_function", help="The distance function One of {}. Defaults to {}".format(ma.distance.core.distance_types, ma.distance.core.DEFAULT_ICP_FUNCTION), type=str)
+    parser.add_argument(
+        "-c", "--config_file", help="path to a YAML configuration file (only if libpointmatcher is available). \
+            If a configuration file is set, the parameters `max_iter` and `epsilon` are ignored.", type=str)
     args = parser.parse_args()
 
     # create output folder if it does not exist
@@ -59,6 +62,21 @@ def main(*args, **kwargs):
         log.info(
             f'"directory {args.output_folder}" does not exist and will be created.')
         os.makedirs(args.output_folder, exist_ok=True)
+
+    print()
+    print("ICP function used: {}".format(ma.distance.DEFAULT_ICP_FUNCTION))
+
+    if ma.distance.libpointmatcher.HAS_LIBPOINTMATCHER:
+        if args.config_file:
+            ma.distance.libpointmatcher.set_default_ICP_object_from_yaml(
+                args.config_file)
+
+        print()
+        print("PIPELINE INFORMATION:")
+        print()
+        print(ma.distance.libpointmatcher.string_of_icp_object(
+            ma.distance.libpointmatcher.get_default_icp_object()
+        ))
 
     dist_df, rots, tras = distances_by_icp(
         args.input_path, n=args.n_samples, jobs=args.jobs, epsilon=args.epsilon, max_iter=args.max_iter)

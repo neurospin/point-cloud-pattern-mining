@@ -1,3 +1,4 @@
+import dis
 import pandas
 from tqdm import tqdm
 from functools import partial
@@ -36,11 +37,11 @@ _distance_types_map = {
     "icp_python": functions.icp_python
 }
 
-DEFAULT_FUNCTION = "icp_python"
+DEFAULT_ICP_FUNCTION = "icp_python"
 
 if HAS_LIBPOINTMATCHER:
     _distance_types_map["icp_libpointmatcher"] = libpointmatcher.icp_libpointmatcher
-    DEFAULT_FUNCTION = "icp_libpointmatcher"
+    DEFAULT_ICP_FUNCTION = "icp_libpointmatcher"
 
 
 distance_types = list(_distance_types_map.keys())
@@ -52,7 +53,7 @@ def _get_distance_f(x):
         try:
             # get the specified distance function, default to the PYTHON implementation
             distance_f = _distance_types_map.get(
-                x, DEFAULT_FUNCTION)
+                x, _distance_types_map[DEFAULT_ICP_FUNCTION])
         except:
             raise ValueError(
                 "The distance type must be one of {}".format(distance_types))
@@ -159,7 +160,7 @@ def calc_all_icp(point_clouds: dict, n_cpu_max: int = None, distance_f="icp_libp
     names = list(point_clouds.keys())
 
     if distance_f == "icp_libpointmatcher":
-        libpointmatcher.set_default_icp_parameters(
+        libpointmatcher.set_icp_object_parameters(
             epsilon=epsilon, max_iter=max_iter)
 
     d = calc_all_distances(

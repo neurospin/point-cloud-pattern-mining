@@ -153,11 +153,11 @@ def load_buckets(bucket_folder: str, transformation_folder: str = None, flip: bo
 
 
 def align_pc_pair(pc_to_align: np.ndarray, reference_pc: np.ndarray,
-                  max_iter=1e3, epsilon=1e-2):
+                  max_iter=100, epsilon=0.01):
     """Align two point-clouds by ICP"""
     # calculate ICP
     _, rot, tra = distance.calc_distance(
-        pc_to_align, reference_pc, 'icp',
+        pc_to_align, reference_pc, distance_f=None,
         max_iter=max_iter, epsilon=epsilon)
     # transform the bucket with the ICP rotation matrix and translation vector
     data_points = transform_datapoints(pc_to_align, (1, 1, 1), rot, tra)
@@ -165,14 +165,14 @@ def align_pc_pair(pc_to_align: np.ndarray, reference_pc: np.ndarray,
     return data_points, rot, tra
 
 
-def align_pcs(pcs: Sequence[np.ndarray], reference_pc_name: str, cores=None, verbose=True):
+def align_pcs(pcs: Sequence[np.ndarray], reference_pc, cores=None, verbose=True, max_iter=100, epsilon=0.01):
     """ Align the given point-clouds to a reference point-cloud, using ICP.
 
     This function is parallelized, it uses all CPUs minus 3 by default, if cores is not specified.
 
     Args:
         pcs (Sequence[np.ndarray]): dictionary of point-clouds indexed by subject names
-        reference_pc_name (str): name of the reference point-cloud to which the other are aligned.
+        reference_pc_name (str ou ndarray): reference point clouod or name of the reference point-cloud to which the other are aligned.
             It must be in the keys of pcs
 
     Returns:
@@ -181,14 +181,23 @@ def align_pcs(pcs: Sequence[np.ndarray], reference_pc_name: str, cores=None, ver
             the rotation matrix
             the translation vector
     """
-    assert reference_pc_name in pcs
 
-    model_bucket = pcs[reference_pc_name]
+    if isinstance(reference_pc, str):
+        assert reference_pc in pcs
+        reference = pcs[reference_pc]
+        reference_name = reference_pc
+    elif isinstance(reference_pc, np.ndarray):
+        reference = reference_pc
+        reference_name = "reference"
+    else:
+        raise ValueError("invalid value")
+
     subjects = pcs.keys()
     # TODO make sure the order is the same here
     other_pcs = pcs.values()
 
-    f = partial(align_pc_pair, reference_pc=model_bucket)
+    f = partial(align_pc_pair, reference_pc=reference,
+                max_iter=max_iter, epsilon=epsilon)
 
     if cores is None:
         cores = cpu_count()-3
@@ -198,7 +207,7 @@ def align_pcs(pcs: Sequence[np.ndarray], reference_pc_name: str, cores=None, ver
 
         with Pool(cores) as p:
             icp_output = list(tqdm(p.imap(f, other_pcs), total=len(other_pcs),
-                                   desc="Aligning point-clouds to {}".format(reference_pc_name)))
+                                   desc="Aligning point-clouds to {}".format(reference_name)))
     else:
         with Pool(cores) as p:
             icp_output = p.map(f, other_pcs)
