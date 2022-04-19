@@ -51,7 +51,7 @@ def main(*args, **kwargs):
     parser.add_argument(
         "-i", "--max_iter", help="Max number of iteration. Defaults to 10.", type=int, default=10)
     parser.add_argument(
-        "-f", "--distance_function", help="The distance function One of {}. Defaults to {}".format(ma.distance.core.distance_types, ma.distance.core.DEFAULT_ICP_FUNCTION), type=str)
+        "-f", "--distance_function", help="The distance function One of {}. Defaults to {}".format(ma.distance.core.distance_types, ma.distance.core._DEFAULT_DIST_FUNCTION_NAME), type=str)
     parser.add_argument(
         "-c", "--config_file", help="path to a YAML configuration file (only if libpointmatcher is available). \
             If a configuration file is set, the parameters `max_iter` and `epsilon` are ignored.", type=str)
@@ -64,7 +64,8 @@ def main(*args, **kwargs):
         os.makedirs(args.output_folder, exist_ok=True)
 
     print()
-    print("ICP function used: {}".format(ma.distance.DEFAULT_ICP_FUNCTION))
+    print("ICP function used: {}".format(
+        ma.distance._DEFAULT_DIST_FUNCTION_NAME))
 
     if ma.distance.libpointmatcher.HAS_LIBPOINTMATCHER:
         if args.config_file:

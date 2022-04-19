@@ -1,6 +1,6 @@
 import numpy
 import multiprocessing as mp
-
+from sklearn.decomposition import PCA
 
 # class DistanceResult:
 #     """Regrup the sandard result of ICP distance functions"""
@@ -83,6 +83,38 @@ def _calc_transform(a1: numpy.ndarray, a2: numpy.ndarray, closest_points: numpy.
     translation_v = meanModel - numpy.dot(rotation_M, meanData)
 
     return rotation_M, translation_v
+
+
+def coarse_PCA(moving: numpy.ndarray, model: numpy.ndarray, components=3, **kwargs):
+    """Calculate distance after a coarse alignment.
+    The coarse alignment is estimated by alining the components of the PCA
+    of both moving and model point clouds."""
+
+    pca = PCA(components)
+
+    cm1 = model.mean(axis=0)
+    cm2 = moving.mean(axis=0)
+
+    pca_fit = pca.fit(model)
+    pcay1 = pca_fit.components_
+    pc = pca.transform(model)
+
+    pca_fit = pca.fit(moving)
+    pcay2 = pca_fit.components_
+    ref = pca.transform(moving)
+
+    # cross correlation matrix
+    H = (pcay1.T@pcay2)
+    # 2 SVD
+    U, D, Vt = numpy.linalg.svd(H)
+    # Rotation
+    R = U@Vt
+    # Translation
+    t = cm1 - R@cm2
+
+    _, distance = _calc_closest_point(pc.T, ref.T)
+
+    return distance, R, t
 
 
 def icp_python(moving: numpy.ndarray, model: numpy.ndarray, max_iter: int = 10, epsilon: float = 0.1):

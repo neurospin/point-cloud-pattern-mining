@@ -34,30 +34,50 @@ class ICP_result:
 # a map of distance types and the corresponding distance calculating function
 _distance_types_map = {
     "simple": functions.simple,
-    "icp_python": functions.icp_python
+    "icp_python": functions.icp_python,
+    "coarse_PCA": functions.coarse_PCA,
 }
 
-DEFAULT_ICP_FUNCTION = "icp_python"
+
+_DEFAULT_DIST_FUNCTION_NAME = "icp_python"
+# _DEFAULT_DIST_FUNCTION = _distance_types_map.get(_DEFAULT_DIST_FUNCTION_NAME)
 
 if HAS_LIBPOINTMATCHER:
     _distance_types_map["icp_libpointmatcher"] = libpointmatcher.icp_libpointmatcher
-    DEFAULT_ICP_FUNCTION = "icp_libpointmatcher"
+    _DEFAULT_DIST_FUNCTION_NAME = "icp_libpointmatcher"
 
 
 distance_types = list(_distance_types_map.keys())
 
 
-def _get_distance_f(x):
-    if not callable(x):
+def _get_distance_f(f):
+    if not callable(f):
         # get the appropriate distance function from the distance argument
-        try:
-            # get the specified distance function, default to the PYTHON implementation
-            distance_f = _distance_types_map.get(
-                x, _distance_types_map[DEFAULT_ICP_FUNCTION])
-        except:
-            raise ValueError(
-                "The distance type must be one of {}".format(distance_types))
+        if f not in distance_types:
+            # log.warning("The distance name must be one of {}. Got {}".format(
+            #     distance_types, f))
+            # log.warning("deafulting to {}".format(_DEFAULT_DIST_FUNCTION_NAME))
+            f = _DEFAULT_DIST_FUNCTION_NAME
+        # get the specified distance function, default to the PYTHON implementation
+        distance_f = _distance_types_map.get(f)
+
     return distance_f
+
+
+def get_DEFAULT_DIST_FUNCTION_NAME():
+    """get the name of the default distance function."""
+    global _DEFAULT_DIST_FUNCTION_NAME
+    return _DEFAULT_DIST_FUNCTION_NAME
+
+
+def set_DEFAULT_DIST_FUNCTION_NAME(f):
+    """Set the default distance function.
+    Args:
+        function can be a either a callable or a function name.
+    """
+
+    global _DEFAULT_DIST_FUNCTION_NAME
+    _DEFAULT_DIST_FUNCTION_NAME = f
 
 
 def calc_distance(a1: _np.ndarray, a2: _np.ndarray, distance_f: str = 'icp_libpointmatcher', **kwargs):
