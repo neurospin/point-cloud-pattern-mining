@@ -131,7 +131,7 @@ def calc_all_distances(point_clouds: Sequence[_np.ndarray],
 
     # the number of CPUs to use
     if n_cpu_max is None:
-        n_cpu_max = cpu_count()
+        n_cpu_max = cpu_count() - 3
     else:
         n_cpu_max = min(cpu_count(), n_cpu_max)
 
