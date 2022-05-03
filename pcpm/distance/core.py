@@ -18,7 +18,7 @@ except ImportError as e:
     HAS_LIBPOINTMATCHER = False
 
 
-class ICP_result:
+class Distance_result:
     def __init__(self, distances, rotations, translations):
         self.dist = distances
         self.rotations = rotations
@@ -28,7 +28,7 @@ class ICP_result:
         self.dist_max = _np.maximum(distances, distances.T)
 
     def __repr__(self):
-        return f"ICP result containing {len(self.names)} entries"
+        return f"Distance result containing {len(self.names)} entries"
 
 
 # a map of distance types and the corresponding distance calculating function
@@ -40,7 +40,7 @@ _distance_types_map = {
 
 
 _DEFAULT_DIST_FUNCTION_NAME = "icp_python"
-# _DEFAULT_DIST_FUNCTION = _distance_types_map.get(_DEFAULT_DIST_FUNCTION_NAME)
+
 
 if HAS_LIBPOINTMATCHER:
     _distance_types_map["icp_libpointmatcher"] = libpointmatcher.icp_libpointmatcher
@@ -80,7 +80,8 @@ def set_DEFAULT_DIST_FUNCTION_NAME(f):
     _DEFAULT_DIST_FUNCTION_NAME = f
 
 
-def calc_distance(a1: _np.ndarray, a2: _np.ndarray, distance_f: str = 'icp_libpointmatcher', **kwargs):
+def calc_distance(a1: _np.ndarray, a2: _np.ndarray,
+                  distance_f: str = _DEFAULT_DIST_FUNCTION_NAME, **kwargs):
     """Calculate the distance between arrays a1 and a2.
     The distance type is specified in the distance_f argument, it must be a string or a function.
     kwargs are passed to the distance function.
@@ -106,7 +107,7 @@ py
 
 
 def calc_all_distances(point_clouds: Sequence[_np.ndarray],
-                       distance_f: str = "icp_libpointmatcher",
+                       distance_f: str = _DEFAULT_DIST_FUNCTION_NAME,
                        indexes: Sequence[int] = 'all',
                        n_cpu_max=None, **kwargs):
     """Calculate the distance between point-clouds.
@@ -159,7 +160,8 @@ def calc_all_distances(point_clouds: Sequence[_np.ndarray],
     return dist_results
 
 
-def calc_all_icp(point_clouds: dict, n_cpu_max: int = None, distance_f="icp_libpointmatcher", max_iter=10, epsilon=0.1, **kwargs):
+def calc_all_icp(point_clouds: dict, n_cpu_max: int = None,
+                 distance_f=_DEFAULT_DIST_FUNCTION_NAME, max_iter=10, epsilon=0.1, **kwargs):
     """"Run ICP over all the pairs of point-clouds.
 
     Args:
@@ -192,7 +194,7 @@ def calc_all_icp(point_clouds: dict, n_cpu_max: int = None, distance_f="icp_libp
     rot = dict(zip(names, d['rotation']))
     tra = dict(zip(names, d['translation']))
 
-    return ICP_result(dist, rot, tra)
+    return Distance_result(dist, rot, tra)
 
 
 def find_MAD_outliers(distance_df: pandas.DataFrame, sd_factor: int = 3):
