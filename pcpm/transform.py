@@ -6,7 +6,7 @@ from tqdm import tqdm
 import logging
 from multiprocessing import Pool, cpu_count
 from functools import partial
-
+from scipy.spatial.transform import Rotation
 from . import files_utils as fu
 from . import distance
 
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 # TODO: USE SCIPY AFFINE_TRANSFORM
-def transform_datapoints(data_points: np.ndarray, dxyz: np.ndarray, rotation_matrix: np.ndarray, translation_vector: np.ndarray, flip: bool = False) -> np.ndarray:
+def transform_datapoints(data_points: np.ndarray, dxyz=None, rotation_matrix=None, translation_vector=None, flip: bool = False) -> np.ndarray:
     """Transform the data_points.
 
     The datapoint are scaled according to dxyz, then rotated with rotation_matrix and
@@ -23,29 +23,22 @@ def transform_datapoints(data_points: np.ndarray, dxyz: np.ndarray, rotation_mat
     If flip is True, the x coordinates are inverted (x --> -x)
     """
 
-    tr_data_points = np.empty_like(data_points, dtype=float)
+    dp = data_points.copy()
 
-    for i, point in enumerate(data_points):
-        # multiply by scale factors
-        point = point*dxyz
+    if dxyz is not None:
+        # rescale
+        dp *= dxyz
 
-        if (rotation_matrix is not None) and not np.array_equal(rotation_matrix, np.eye(3)):
-            # print("rotate", point)
-            point = np.dot(rotation_matrix, point)
+    if (rotation_matrix is not None) and not np.array_equal(rotation_matrix, np.eye(3)):
+        # rotate
+        rot = Rotation.from_matrix(rotation_matrix)
+        dp = rot.apply(dp)
 
+    if (translation_vector is not None) and not np.array_equal(translation_vector, np.zeros(3)):
         # translate
-        if (translation_vector is not None) and not np.array_equal(translation_vector, np.zeros(3)):
-            # print("translate", point, translation_vector)
-            point = point + translation_vector
+        dp += translation_vector
 
-        if flip:
-            # print(point)
-            point[0] = -point[0]
-
-        # store
-        tr_data_points[i] = point
-
-    return tr_data_points
+    return dp
 
 
 def talairach_transform(bucket_file: str, transformation_file: str, flip: bool = False):
