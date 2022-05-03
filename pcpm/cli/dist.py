@@ -64,7 +64,7 @@ def main(*args, **kwargs):
         os.makedirs(args.output_folder, exist_ok=True)
 
     print()
-    print("ICP function used: {}".format(
+    print("Distance function used: {}".format(
         ma.distance._DEFAULT_DIST_FUNCTION_NAME))
 
     if ma.distance.libpointmatcher.HAS_LIBPOINTMATCHER:
