@@ -45,7 +45,7 @@ EXTRA_REQUIRES = {
 PYTHON_REQUIRES = '>=3.6'
 ENTRYPOINTS = {
     'console_scripts': [
-        'pcpm_dist=pcpm.dist.icp:main'
+        'pcpm_dist=pcpm.cli.dist:main'
     ],
 }
 
