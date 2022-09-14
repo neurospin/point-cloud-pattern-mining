@@ -69,10 +69,18 @@ def weights_for_moving_averages(centers, FWHM, max):
         plt.plot(centers, numpy.zeros(len(centers)), 'or', label="centers")
 
 
-def clustering(data: pandas.DataFrame, labels, cmap='tab10', **kwargs):
+def clustering(data: pandas.DataFrame, labels, cmap=None, **kwargs):
+    """Specify a colormap with the matplotlib format (e.g. tab10)
+    If cmap is None, use matplotlib color cycle."""
     df = pandas.DataFrame(data).copy()
     embedding_dim = len(df.iloc[0])
-    cmap = matplotlib.cm.get_cmap(cmap)
+    
+    if cmap is None:
+        cmap = matplotlib.colors.ListedColormap(matplotlib.rcParams['axes.prop_cycle'].by_key()['color'])
+    else:
+        cmap = matplotlib.cm.get_cmap(cmap)
+    
+    
 
     # counter = Counter(labels)
     # d = {item[0]: i for i, item in enumerate(
