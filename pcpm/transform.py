@@ -6,7 +6,7 @@ from tqdm import tqdm
 import logging
 from multiprocessing import Pool, cpu_count
 from functools import partial
-from scipy.spatial.transform import Rotation
+#from scipy.spatial.transform import Rotation
 from . import files_utils as fu
 from . import distance
 
@@ -31,8 +31,10 @@ def transform_datapoints(data_points: np.ndarray, dxyz=None, rotation_matrix=Non
 
     if (rotation_matrix is not None) and not np.array_equal(rotation_matrix, np.eye(3)):
         # rotate
-        rot = Rotation.from_matrix(rotation_matrix)
-        dp = rot.apply(dp)
+        # DO NOT USE SCIPY ROTATION HERE, It does not work as expected.
+        # found a problem with coarse_PCA rotation
+
+        dp = (rotation_matrix@dp.T).T
 
     if (translation_vector is not None) and not np.array_equal(translation_vector, np.zeros(3)):
         # translate
@@ -147,8 +149,8 @@ def load_buckets(bucket_folder: str, transformation_folder: str = None, flip: bo
 
 def align_pc_pair(pc_to_align: np.ndarray, reference_pc: np.ndarray,
                   max_iter=100, epsilon=0.01):
-    """Align two point-clouds by ICP"""
-    # calculate ICP
+    """Align two point-clouds (uses the default distance function)."""
+    # calculate distance
     _, rot, tra = distance.calc_distance(
         pc_to_align, reference_pc, distance_f=None,
         max_iter=max_iter, epsilon=epsilon)
