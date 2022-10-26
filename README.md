@@ -1,5 +1,7 @@
 # Point-Cloud-Pattern-Mining PCPM
 
+[![DOI](https://zenodo.org/badge/362129207.svg)](https://zenodo.org/badge/latestdoi/362129207)
+
 This library can be used to compare entities described as sets of 3D point clouds (like cortical sulci or fibers bundles).
 
 The analysis starts with the initial calculation of a geometrical distance among the different N point clouds (aka subjects), resulting in a N by N distance matrix. Then multidimensional scaling via isomap is applied to infer the relationships that link entities sharing common features. The isomap algorithm estimates the intrinsic geometry of the data manifold based on a rough estimate of each data point’s neighbors. Then, the geodesic distances among the subjects are recalculated on the inferred manifold. The top n eigenvectors of the geodesic distance matrix represent the coordinates in the new n-dimensional Euclidean space.
