@@ -1,6 +1,6 @@
 import numpy
 import multiprocessing as mp
-
+from sklearn.decomposition import PCA
 
 # class DistanceResult:
 #     """Regrup the sandard result of ICP distance functions"""
@@ -30,9 +30,8 @@ def _calc_closest_point(a1: numpy.ndarray, a2: numpy.ndarray):
     :param a2: second array
     :type a2: DxM numpy.ndarray
     :return: closest points coodrinates (DxN),
-        respective distances (1xN),
         closest points indices in a2 (1xN),
-        average distance
+        average distance (scalar)
     :rtype: tuple
     """
 
@@ -86,28 +85,58 @@ def _calc_transform(a1: numpy.ndarray, a2: numpy.ndarray, closest_points: numpy.
     return rotation_M, translation_v
 
 
-def icp(moving: numpy.ndarray, model: numpy.ndarray, max_iter: int = 10, epsilon: float = 0.1):
+def coarse_PCA(moving: numpy.ndarray, model: numpy.ndarray, components=3, **kwargs):
+    """Calculate distance after a coarse alignment.
+    The coarse alignment is estimated by alining the components of the PCA
+    of both moving and model point clouds."""
+
+    pca = PCA(components)
+
+    cm1 = model.mean(axis=0)
+    cm2 = moving.mean(axis=0)
+
+    pca_fit = pca.fit(model)
+    pcay1 = pca_fit.components_
+    pc = pca.transform(model)
+
+    pca_fit = pca.fit(moving)
+    pcay2 = pca_fit.components_
+    ref = pca.transform(moving)
+
+    # cross correlation matrix
+    H = (pcay1.T@pcay2)
+    # 2 SVD
+    U, D, Vt = numpy.linalg.svd(H)
+    # Rotation
+    R = U@Vt
+    # Translation
+    t = cm1 - R@cm2
+
+    _, distance = _calc_closest_point(pc.T, ref.T)
+
+    return distance, R, t
+
+
+def icp_python(moving: numpy.ndarray, model: numpy.ndarray, max_iter: int = 10, epsilon: float = 0.1):
     """Calculate Iterative Closest Point (ICP) distance.
 
     Array a1 is iteratively rotated and translated to make it closer
     to array a2.
 
-    :param moving: reference array
-    :type moving: numpy.ndarray
-    :param model: other array
-    :type model: numpy.ndarray
-    :param max_iter: man number of iterations, defaults to 10
-    :type max_iter: int, optional
-    :param epsilon: min distance improvement on one iteration, defaults to 0.1
-    :type epsilon: float, optional
+    Args:
+        moving ndarray (N,3): point_cloud
+        model ndarray (N,3): reference point_cloud
+        max_iter (int, optional): man number of iterations, defaults to 10
+        epsilon, float: min distance improvement on one iteration, defaults to 0.1
 
-    :return: a (dist,rot,trans) tuple containing
-        - the final average distance between closest points after transformation of a1
-        - the rotation matrix and the translation vector of the ICP transformation of a1
+    Returns:
+    (dist,rot,trans) tuple containing
+    - the final average distance between closest points after transformation of a1
+    - the rotation matrix and the translation vector of the ICP transformation of a1
     """
 
-    a1 = moving
-    a2 = model
+    a1 = moving.T
+    a2 = model.T
 
     dim_n = a1.shape[0]  # single point dimensionality
     # cumulative rotation matrix and translation vector
@@ -148,6 +177,6 @@ def simple(a1: numpy.ndarray, a2: numpy.ndarray):
     calculate average distance of the closest points of a1 and a2
     """
 
-    _, av_dist = _calc_closest_point(a1, a2)
+    _, av_dist = _calc_closest_point(a1.T, a2.T)
 
     return av_dist

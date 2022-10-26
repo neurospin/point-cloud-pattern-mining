@@ -1,9 +1,8 @@
-from click import FileError
 import numpy
 import pandas
 from os import path as _path
 from re import A, match as _re_match
-from ..distance.core import ICP_result
+from ..distance.core import Distance_result
 from typing import Sequence
 
 
@@ -51,7 +50,7 @@ def load_icp_result(csv_path: str, npz_path: str = None) -> dict:
     # load transformations
     rots, trans = dict(numpy.load(npz_path, allow_pickle=True)).values()
 
-    return ICP_result(dist, rots, trans)
+    return Distance_result(dist, rots, trans)
 
 
 def save_point_clouds_as_npz(pcs: dict, path: str) -> None:

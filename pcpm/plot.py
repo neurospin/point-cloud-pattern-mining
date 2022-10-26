@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 import logging
 
+from . recipes.clusters import _count_labels
+
 log = logging.getLogger(__name__)
 
 warnings.filterwarnings("ignore", module=".*pandas*")
@@ -67,17 +69,27 @@ def weights_for_moving_averages(centers, FWHM, max):
         plt.plot(centers, numpy.zeros(len(centers)), 'or', label="centers")
 
 
-def clustering(data: pandas.DataFrame, labels, cmap='tab10', **kwargs):
+def clustering(data: pandas.DataFrame, labels, cmap=None, **kwargs):
+    """Specify a colormap with the matplotlib format (e.g. tab10)
+    If cmap is None, use matplotlib color cycle."""
     df = pandas.DataFrame(data).copy()
     embedding_dim = len(df.iloc[0])
-    cmap = matplotlib.cm.get_cmap(cmap)
+    
+    if cmap is None:
+        cmap = matplotlib.colors.ListedColormap(matplotlib.rcParams['axes.prop_cycle'].by_key()['color'])
+    else:
+        cmap = matplotlib.cm.get_cmap(cmap)
+    
+    
 
-    counter = Counter(labels)
-    d = {item[0]: i for i, item in enumerate(
-        sorted(counter.items(), key=lambda x: x[1], reverse=True))}
-    new_labels = list(map(lambda x: d[x], labels))
-    label_counts = sorted(
-        Counter(new_labels).items(), key=lambda x: x[1], reverse=True)
+    # counter = Counter(labels)
+    # d = {item[0]: i for i, item in enumerate(
+    #     sorted(counter.items(), key=lambda x: x[1], reverse=True))}
+    # new_labels = list(map(lambda x: d[x], labels))
+    # label_counts = sorted(
+    #     Counter(new_labels).items(), key=lambda x: x[1], reverse=True)
+
+    new_labels, label_counts = _count_labels(labels)
 
     df['label'] = new_labels
     df['color'] = list(map(cmap, new_labels))
@@ -87,7 +99,7 @@ def clustering(data: pandas.DataFrame, labels, cmap='tab10', **kwargs):
             plt.hist(df.loc[df.label == label].iloc[:, 0], **kwargs)
     elif embedding_dim == 2:
         df.plot.scatter(*df.columns[0:2], c=df.loc[:, "color"])
-        counter = Counter(new_labels)
+        # counter = Counter(new_labels)
         # order the labels by their frequency
         if len(label_counts) > 10:
             # cut the labels for the legend

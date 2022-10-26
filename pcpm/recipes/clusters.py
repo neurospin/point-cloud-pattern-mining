@@ -43,6 +43,18 @@ def labels_to_names(embedding: pandas.DataFrame, labels: Sequence[str]) -> Seque
     return names_lists
 
 
+def _count_labels(labels):
+    counter = Counter(labels)
+    label_counts = sorted(counter.items(), key=lambda x: x[1], reverse=True)
+
+    d = {item[0]: i for i, item in enumerate(label_counts)}
+    d = {k: k if isinstance(k, numpy.number) and (
+        k < 0) else v for k, v in d.items()}
+    new_labels = list(map(lambda x: d[x], labels))
+
+    return new_labels, label_counts
+
+
 def rename_labels_by_count(labels):
     """Rename the given label arrays, sorting labels by item counts
 
@@ -52,10 +64,7 @@ def rename_labels_by_count(labels):
     Returns:
         array of labels
     """
-    counter = Counter(labels)
-    d = {item[0]: i for i, item in enumerate(
-        sorted(counter.items(), key=lambda x: x[1], reverse=True))}
-    new_labels = list(map(lambda x: d[x], labels))
+    new_labels, label_counts = _count_labels(labels)
 
     return new_labels
 
