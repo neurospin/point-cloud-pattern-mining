@@ -40,6 +40,10 @@ def transform_datapoints(data_points: np.ndarray, dxyz=None, rotation_matrix=Non
         # translate
         dp += translation_vector
 
+    if flip:
+        # invert x coordinates
+        dp[:,0]=-dp[:,0]
+    
     return dp
 
 
