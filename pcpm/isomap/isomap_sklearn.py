@@ -1,5 +1,5 @@
 from sklearn.neighbors import NearestNeighbors, kneighbors_graph
-from sklearn.utils.graph import graph_shortest_path
+from scipy.sparse.csgraph import shortest_path as graph_shortest_path
 from sklearn.decomposition import KernelPCA
 from sklearn.manifold import Isomap
 from pandas import DataFrame
