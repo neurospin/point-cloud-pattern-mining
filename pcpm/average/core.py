@@ -110,7 +110,7 @@ def average_pcs_w(point_clouds: dict, weights: Sequence[float], normalize: bool)
     return Average_result(vol, numpy.round((xmin, ymin, zmin)).astype(int), n=len(point_clouds))
 
 
-def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, center_name: str, FWHM: float, normalize: bool = True) -> Average_result:
+def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, center: str or list, FWHM: float, normalize: bool = True) -> Average_result:
     """Return a weighted average of the given point-clouds.
 
     Weights in [0,1] are calculated with 1-dimensional Gaussian function of the distance (in the embedding) of each pc from the specified center.
@@ -119,7 +119,7 @@ def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, center_name: st
     Args:
         point_clouds (dict): [description]
         embedding (pandas.DataFrame): [description]
-        center_name (str): [description]
+        center_name (str or iterqble):  either the name of a subjet or an iterable of coordinates in the embedding
         FWHM (float): [description]
         normalize (bool, optional): map the output voxel values to [0,1]. Defaults to True. Defaults to True.
 
@@ -129,14 +129,18 @@ def average_pcs(point_clouds: dict, embedding: pandas.DataFrame, center_name: st
 
     names = list(point_clouds.keys())
 
-    assert center_name in names, f"The name '{center_name}' is not in the point cloud keys"
+    if isinstance(center, str):
+        assert center_name in names, f"The name '{center_name}' is not in the point cloud keys"
+        center = embedding.loc[center].values
+    else:
+        center = numpy.array(center)
 
     embedding = embedding.loc[names]
 
-    weights = _get_weights(embedding, center_name, FWHM)
+    weights = _get_weights(embedding, center, FWHM)
 
     av = average_pcs_w(point_clouds, weights, normalize=normalize)
-    av.coord_in_embedding = embedding.loc[center_name].values
+    av.coord_in_embedding = center
     return av
 
 
